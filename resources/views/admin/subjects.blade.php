@@ -50,85 +50,70 @@
         <div class="max-w-7xl mx-auto">
             
             <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 mb-8">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                    <div>
-                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Subject Management</h2>
-                        <p class="text-slate-500 mt-1 text-sm font-medium">Define curriculum learning areas</p>
-                    </div>
-                    
-                    <form action="{{ route('admin.subjects.store') }}" method="POST" class="flex flex-wrap gap-3 w-full lg:w-auto">
-                        @csrf
-                        <input type="text" name="subject_code" placeholder="Code (e.g., 101)" required
-                               class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
-                        
-                        <input type="text" name="subject_name" placeholder="Subject Name" required
-                               class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all lg:w-64">
-                    
-                        <form action="{{ route('admin.storeSubject') }}" method="POST" class="flex gap-2">
-                            @csrf
-                            <input type="text" name="code" placeholder="Code (e.g., 101)" required class="...">
-                            <input type="text" name="name" placeholder="Subject Name" required class="...">
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                            <div>
+                                <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Subject Management</h2>
+                                <p class="text-slate-500 mt-1 text-sm font-medium">Define curriculum learning areas</p>
+                            </div>
                             
-                            <select name="level" required class="border-slate-200 border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                                <option value="" disabled selected>Select Level</option>
-                                <option value="Grade 7">Grade 7</option>
-                                <option value="Grade 8">Grade 8</option>
-                                <option value="Grade 9">Grade 9</option>
-                                <option value="Grade 10">Grade 10</option>
-                                <option value="Grade 11">Grade 11</option>
-                                <option value="Grade 12">Grade 12</option>
-                            </select>
+                            <form action="{{ route('admin.subjects.store') }}" method="POST" class="flex flex-wrap gap-3 w-full lg:w-auto">
+                                @csrf
+                                <input type="text" name="code" placeholder="Code (e.g., 101)" required
+                                       class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                                
+                                <input type="text" name="name" placeholder="Subject Name" required
+                                       class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all lg:w-64">
+                    
+                                <select name="level" required 
+                                        class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                                    <option value="" disabled selected>Select Level</option>
+                                    <option value="Grade 7">Grade 7</option>
+                                    <option value="Grade 8">Grade 8</option>
+                                    <option value="Grade 9">Grade 9</option>
+                                    <option value="Grade 10">Grade 10</option>
+                                    <option value="Grade 11">Grade 11</option>
+                                    <option value="Grade 12">Grade 12</option>
+                                </select>
                             
-                            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-xl">+ SAVE</button>
-                        </form>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl text-sm font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95">
-                            <i class="fas fa-plus mr-2"></i> SAVE
-                        </button>
-                    </form>
-                </div>
-
-                @if(session('success'))
-                    <div class="mt-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-2xl text-xs font-bold flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
-                    </div>
-                @endif
-            </div>
-
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                   <thead>
-                        <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-[0.2em] border-b border-slate-100">
-                            <th class="px-10 py-6 font-black">Code</th>
-                            <th class="px-10 py-6 font-black">Learning Area</th>
-                            <th class="px-10 py-6 font-black text-center">Level</th> <th class="px-10 py-6 font-black text-center">Status</th>
-                            <th class="px-10 py-6 font-black text-right">Actions</th>
-                        </tr>
-                  </thead>
-                    <tbody class="divide-y divide-slate-50">
-                        @forelse($subjects as $subject)
-                        <tr class="group hover:bg-slate-50/80 transition-all">
-                            <td class="px-10 py-5">
-                                <span class="text-blue-600 font-black text-xs bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-                                    {{ $subject->code }}
-                                </span>
-                            </td>
-                            <td class="px-10 py-5 font-bold text-slate-700">{{ $subject->name }}</td>
-                            <td class="px-10 py-5 text-center">
-                                <span class="px-3 py-1 bg-green-100 text-green-600 text-[10px] font-black rounded-lg border border-green-200 uppercase">Active</span>
-                            </td>
-                            <td class="px-10 py-5 text-right">
-                                <button onclick="confirmDelete({{ $subject->id }}, '{{ $subject->name }}')" 
-                                        class="text-slate-400 hover:text-red-600 hover:bg-red-50 w-10 h-10 rounded-2xl inline-flex items-center justify-center transition-all">
-                                    <i class="fas fa-trash text-xs"></i>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl text-sm font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95">
+                                    <i class="fas fa-plus mr-2"></i> SAVE
                                 </button>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="px-10 py-20 text-center text-slate-400 font-bold">No subjects defined yet.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
+                            </form>
+                        </div>
+                    
+                        @if(session('success'))
+                            <div class="mt-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-2xl text-xs font-bold flex items-center">
+                                <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+                            </div>
+                        @endif
+                    </div>
+                    <tbody class="divide-y divide-slate-50">
+                    @forelse($subjects as $subject)
+                    <tr class="group hover:bg-slate-50/80 transition-all">
+                        <td class="px-10 py-5">
+                            <span class="text-blue-600 font-black text-xs bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
+                                {{ $subject->code }}
+                            </span>
+                        </td>
+                        <td class="px-10 py-5 font-bold text-slate-700">{{ $subject->name }}</td>
+                        
+                        <td class="px-10 py-5 text-center font-bold text-blue-500 text-xs">
+                            {{ $subject->level ?? 'N/A' }}
+                        </td>
+                
+                        <td class="px-10 py-5 text-center">
+                            <span class="px-3 py-1 bg-green-100 text-green-600 text-[10px] font-black rounded-lg border border-green-200 uppercase">Active</span>
+                        </td>
+                        <td class="px-10 py-5 text-right">
+                            <button onclick="confirmDelete({{ $subject->id }}, '{{ $subject->name }}')" 
+                                    class="text-slate-400 hover:text-red-600 hover:bg-red-50 w-10 h-10 rounded-2xl inline-flex items-center justify-center transition-all">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    @empty
+                    @endforelse
+                </tbody>
                 </table>
             </div>
         </div>
