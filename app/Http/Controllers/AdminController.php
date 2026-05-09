@@ -81,12 +81,12 @@ class AdminController extends Controller
     ]);
 
     // Save the subject with the selected Grade Level
-    Subject::create([
-        'code' => $request->code,
-        'name' => $request->name,
-        'level' => $request->level, // This ensures it is not "N/A"
-        'status' => 'ACTIVE',
-    ]);
+   Subject::create([
+    'code' => $request->code,
+    'name' => $request->name,
+    'level' => $request->level,
+    // 'status' => 'ACTIVE', <--- REMOVE OR COMMENT OUT THIS LINE
+]);
 
     return back()->with('success', 'Subject added successfully!');
 }
