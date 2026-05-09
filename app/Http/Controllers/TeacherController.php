@@ -12,30 +12,33 @@ use Illuminate\Support\Facades\DB;
 class TeacherController extends Controller
 {
     public function studentList($adviser_id, $level = null)
-    {
-        $teacher = TeacherIdentity::where('employee_id', $adviser_id)->first();
+{
+    $teacher = TeacherIdentity::where('employee_id', $adviser_id)->first();
 
-        if (!$teacher) {
-            return redirect()->route('login')->with('error', 'Session expired.');
-        }
-
-        $query = StudentIdentity::where('adviser_id', $teacher->id);
-
-        if ($level) {
-            $query->where('level', $level);
-        }
-
-        $students = $query->get();
-        
-        $allGrades = Grade::whereIn('lrn', $students->pluck('lrn'))
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $subjects = Subject::orderBy('name', 'asc')->get();
-
-        return view('teacher.students', compact('students', 'subjects', 'allGrades'));
+    if (!$teacher) {
+        return redirect()->route('login')->with('error', 'Session expired.');
     }
 
+    $query = StudentIdentity::where('adviser_id', $teacher->id);
+
+    if ($level) {
+        $query->where('level', $level);
+    }
+
+    $students = $query->get();
+    
+    $allGrades = Grade::whereIn('lrn', $students->pluck('lrn'))
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    // Fetch all subjects so we can filter them in the modal via JavaScript
+    $subjects = Subject::where('status', 'ACTIVE')
+        ->orderBy('level', 'asc')
+        ->orderBy('name', 'asc')
+        ->get();
+
+    return view('teacher.students', compact('students', 'subjects', 'allGrades'));
+}
     public function storeStudent(Request $request) {
         $request->validate([
             'lrn' => 'required|digits:12|unique:student_identities,lrn',
