@@ -163,7 +163,7 @@
                             </button>
                          </td>
                         <td class="px-6 py-4 text-center space-x-1">
-                            <button onclick="openGradeModal('{{ $student->lrn }}', '{{ $student->fullname }}')" 
+                            <button onclick="openGradeModal('{{ $student->lrn }}', '{{ $student->fullname }}', '{{ $student->level }}')"
                                 class="text-indigo-600 hover:bg-indigo-600 hover:text-white font-bold text-[10px] uppercase border border-indigo-200 px-3 py-1.5 rounded-md transition-all shadow-sm">
                                 <i class="fas fa-pen-nib mr-1"></i> Grade
                             </button>
