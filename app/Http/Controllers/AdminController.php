@@ -321,9 +321,10 @@ class AdminController extends Controller
     
 public function monitoring(Request $request)
 {
-    // Fix 1: Ensure the term is lowercase to match our comparison
+    // 1. Force the term to lowercase so it matches regardless of how it was typed
     $term = strtolower($request->get('term', '1st term'));
     
+    // 2. Using your local logic of 6 subjects per student
     $subjectsPerStudent = 6; 
 
     $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')
@@ -332,10 +333,11 @@ public function monitoring(Request $request)
             
             $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
             $studentCount = $studentIds->count();
+
+            // Goal: (Total Students * 6 Subjects)
             $totalExpectedGrades = $studentCount * $subjectsPerStudent;
 
-            // Fix 2: Use whereRaw with LOWER() for PostgreSQL case-insensitivity
-            // Fix 3: Use DB::raw('true/false') for PostgreSQL boolean compatibility
+            // FIX: PostgreSQL needs LOWER() for the term and DB::raw for the boolean
             $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
                 ->whereRaw('LOWER(semester) = ?', [$term])
                 ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('true'))
@@ -355,5 +357,4 @@ public function monitoring(Request $request)
 
     return view('admin.monitoring', compact('teachers', 'term'));
 }
-
 }
