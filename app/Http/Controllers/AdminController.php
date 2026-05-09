@@ -255,8 +255,8 @@ class AdminController extends Controller
      */
   public function incomingGrades()
 {
-    $incomingGrades = \App\Models\Grade::with('subject') // Add this to load subject info
-        ->whereRaw('is_submitted_to_admin::text = ?', ['true'])
+    // REMOVED ->with('subject') to stop the "RelationNotFoundException"
+    $incomingGrades = \App\Models\Grade::whereRaw('is_submitted_to_admin::text = ?', ['true'])
         ->whereRaw('is_published::text = ?', ['false'])
         ->get()
         ->groupBy('lrn');
