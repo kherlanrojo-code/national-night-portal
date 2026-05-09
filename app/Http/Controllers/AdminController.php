@@ -319,40 +319,39 @@ class AdminController extends Controller
         return back()->with('success', 'Signatories updated successfully for all grade forms!');
     }
     
-public function monitoring()
+public function monitoring(Request $request)
 {
-    // 1. Get the term from the dropdown (defaults to '1st term')
-    $term = request('term', '1st term'); 
+    // Fix 1: Ensure the term is lowercase to match our comparison
+    $term = strtolower($request->get('term', '1st term'));
     
-    // 2. Get total number of subjects to calculate expected grades
-    $subjectsCount = \App\Models\Subject::count();
+    $subjectsPerStudent = 6; 
 
-    $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')->get()->map(function($teacher) use ($term, $subjectsCount) {
-        // 3. Get all LRNs for students under this teacher
-        $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
-        
-        $totalStudents = $studentIds->count();
-        $totalExpectedGrades = $totalStudents * $subjectsCount;
+    $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')
+        ->get()
+        ->map(function($teacher) use ($term, $subjectsPerStudent) {
+            
+            $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
+            $studentCount = $studentIds->count();
+            $totalExpectedGrades = $studentCount * $subjectsPerStudent;
 
-        // 4. Count grades actually SENT to Admin (is_submitted_to_admin = true)
-        $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
-            ->where('semester', $term)
-            ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('true'))
-            ->count();
+            // Fix 2: Use whereRaw with LOWER() for PostgreSQL case-insensitivity
+            // Fix 3: Use DB::raw('true/false') for PostgreSQL boolean compatibility
+            $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+                ->whereRaw('LOWER(semester) = ?', [$term])
+                ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('true'))
+                ->count();
 
-        // 5. Count grades that are input but NOT SENT (Drafts/Waiting)
-        $draftGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
-            ->where('semester', $term)
-            ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('false'))
-            ->count();
+            $savedGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+                ->whereRaw('LOWER(semester) = ?', [$term])
+                ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('false'))
+                ->count();
 
-        // Attach data to the teacher object for the Blade file
-        $teacher->expected_total = $totalExpectedGrades;
-        $teacher->actual_sent = $sentGrades;
-        $teacher->has_drafts = ($draftGrades > 0);
+            $teacher->expected_total = $totalExpectedGrades;
+            $teacher->actual_sent = $sentGrades;
+            $teacher->has_drafts = ($savedGrades > 0);
 
-        return $teacher;
-    });
+            return $teacher;
+        });
 
     return view('admin.monitoring', compact('teachers', 'term'));
 }
