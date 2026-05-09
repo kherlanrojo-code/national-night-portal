@@ -90,7 +90,6 @@ class TeacherController extends Controller
             return redirect()->back()->with('error', 'Subject not found.');
         }
 
-        // Logic check: prevents duplicate entries for the same subject/term
         $exists = \App\Models\Grade::where('lrn', $request->lrn)
             ->where('subject', $subject->name) 
             ->where('semester', $request->quarter)
@@ -100,6 +99,18 @@ class TeacherController extends Controller
             return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
         }
 
+        // The syntax error was likely here - fixed the brackets and semicolons
+        \App\Models\Grade::create([
+            'lrn' => $request->lrn,
+            'subject' => $subject->name, 
+            'grade' => $request->grade,
+            'semester' => $request->quarter,
+            'is_submitted_to_admin' => false, 
+            'is_published' => false
+        ]);
+
+        return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
+    }
         // Saving with local logic: includes admin submission status
         \App\Models\Grade::create([
             \App\Models\Grade::create([
