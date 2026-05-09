@@ -67,95 +67,88 @@ class TeacherController extends Controller
             'dob' => $request->dob,
             'level' => $request->level,
             'adviser_id' => $teacher->id, 
-            // Force literal 'true' for PostgreSQL compatibility
-            'is_active' => DB::raw('true'), 
+            'is_active' => true, // Local 1 -> Server true
         ]);
 
         return back()->with('success', 'Student enrolled successfully!');
     }
 
     /**
-     * Handles Grade Submission - Updated to include Subject Code
+     * Handles Grade Submission - Matches your local logic
      */
-  public function submitGrade(Request $request)
-{
-    $request->validate([
-        'lrn' => 'required',
-        'subject_id' => 'required',
-        'grade' => 'required|numeric',
-        'quarter' => 'required'
-    ]);
-
-    $subject = \App\Models\Subject::find($request->subject_id);
-    if (!$subject) {
-        return redirect()->back()->with('error', 'Subject not found.');
-    }
-
-    // FIX: Check if the record exists using the column 'subject' instead of 'subject_code'
-    // because 'subject_code' is missing in your database.
-    $exists = \App\Models\Grade::where('lrn', $request->lrn)
-        ->where('subject', $subject->name) // Match by subject name
-        ->where('semester', $request->quarter)
-        ->exists();
-
-    if ($exists) {
-        return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
-    }
-
-    \App\Models\Grade::create([
-        'lrn' => $request->lrn,
-        'subject' => $subject->name, 
-        // REMOVED 'subject_code' here because it causes the error
-        'grade' => $request->grade,
-        'semester' => $request->quarter,
-        'is_published' => true // Use true for PostgreSQL
-    ]);
-
-    return redirect()->back()->with('success', 'Grade submitted successfully!');
-}
-    \App\Models\Grade::create([
-        'lrn' => $request->lrn,
-        'subject' => $subject->name, 
-        'subject_code' => $subject->code,
-        'grade' => $request->grade,
-        'semester' => $request->quarter, 
-        'is_submitted_to_admin' => 0, 
-    ]);
-
-    return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
-}
-
-  public function sendToAdmin($lrn)
-{
-    
-    \App\Models\Grade::where('lrn', $lrn)
-        ->where('is_submitted_to_admin', 0) // Only target unsubmitted ones
-        ->update([
-            'is_submitted_to_admin' => 1,
-            'is_published' => 0 // Keep as 0 if Admin needs to 'Approve/Publish' them first
+    public function submitGrade(Request $request)
+    {
+        $request->validate([
+            'lrn' => 'required',
+            'subject_id' => 'required',
+            'grade' => 'required|numeric',
+            'quarter' => 'required'
         ]);
 
-    return redirect()->back()->with('success', 'Grades sent! Check Admin Grade Requests.');
-}
+        $subject = \App\Models\Subject::find($request->subject_id);
+        if (!$subject) {
+            return redirect()->back()->with('error', 'Subject not found.');
+        }
 
+        // Logic check: prevents duplicate entries for the same subject/term
+        $exists = \App\Models\Grade::where('lrn', $request->lrn)
+            ->where('subject', $subject->name) 
+            ->where('semester', $request->quarter)
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
+        }
+
+        // Saving with local logic: includes admin submission status
+        \App\Models\Grade::create([
+            'lrn' => $request->lrn,
+            'subject' => $subject->name, 
+            // 'subject_code' => $subject->code, // Uncomment this only if you add the column to DB
+            'grade' => $request->grade,
+            'semester' => $request->quarter,
+            'is_submitted_to_admin' => false, // Local 0 -> Server false
+            'is_published' => false,         // Local 0 -> Server false
+        ]);
+
+        return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
+    }
+
+    /**
+     * Send grades to Admin - Matches your local logic
+     */
+    public function sendToAdmin($lrn)
+    {
+        \App\Models\Grade::where('lrn', $lrn)
+            ->where('is_submitted_to_admin', false) 
+            ->update([
+                'is_submitted_to_admin' => true, // Local 1 -> Server true
+                'is_published' => false          // Local 0 -> Server false
+            ]);
+
+        return redirect()->back()->with('success', 'Grades sent! Check Admin Grade Requests.');
+    }
+
+    /**
+     * Update Student Info - Matches your local logic
+     */
     public function updateStudent(Request $request)
-{
-    $request->validate([
-        'student_id' => 'required|exists:student_identities,id',
-        'lrn' => 'required|digits:12',
-        'fullname' => 'required|string|max:255',
-        'level' => 'required|string'
-    ]);
+    {
+        $request->validate([
+            'student_id' => 'required|exists:student_identities,id',
+            'lrn' => 'required|digits:12',
+            'fullname' => 'required|string|max:255',
+            'level' => 'required|string'
+        ]);
 
-    $student = StudentIdentity::findOrFail($request->student_id);
-    
-    $student->update([
-        'lrn' => $request->lrn,
-        'fullname' => strtoupper($request->fullname), // Keep the name in caps
-        'level' => $request->level,
-    ]);
+        $student = StudentIdentity::findOrFail($request->student_id);
+        
+        $student->update([
+            'lrn' => $request->lrn,
+            'fullname' => strtoupper($request->fullname), 
+            'level' => $request->level,
+        ]);
 
-    return back()->with('success', 'Student information updated successfully!');
+        return back()->with('success', 'Student information updated successfully!');
+    }
 }
-}
-
