@@ -7,6 +7,7 @@ use App\Models\Grade;
 use App\Models\TeacherIdentity;
 use App\Models\Subject; 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
@@ -66,7 +67,8 @@ class TeacherController extends Controller
             'dob' => $request->dob,
             'level' => $request->level,
             'adviser_id' => $teacher->id, 
-            'is_active' => true,
+            // Force literal 'true' for PostgreSQL compatibility
+            'is_active' => DB::raw('true'), 
         ]);
 
         return back()->with('success', 'Student enrolled successfully!');
