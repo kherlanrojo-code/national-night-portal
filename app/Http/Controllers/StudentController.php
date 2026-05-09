@@ -48,7 +48,6 @@ class StudentController extends Controller
             'identifier' => $request->lrn 
         ]);
 
-        // PostgreSQL requires 'true' instead of 1
         StudentIdentity::where('lrn', $request->lrn)->update(['is_active' => true]);
 
         return redirect('/login')->with('success', 'Account created! You can now login.');
@@ -78,12 +77,11 @@ class StudentController extends Controller
         return redirect()->back()->with('success', 'Profile picture updated successfully!');
     }
 
-   public function dashboard(Request $request, $lrn)
+    public function dashboard(Request $request, $lrn)
     {
         $student = StudentIdentity::where('lrn', $lrn)->first();
         if (!$student) { abort(404); }
 
-        // Use true instead of 1 for PostgreSQL compatibility
         $query = Grade::where('lrn', $lrn)->where('is_published', true);
 
         if ($request->filled('semester')) {
@@ -106,7 +104,6 @@ class StudentController extends Controller
         $student = StudentIdentity::where('lrn', $lrn)->first();
         if (!$student) { abort(404); }
 
-        // Use true instead of 1 for PostgreSQL compatibility
         $query = Grade::where('lrn', $lrn)->where('is_published', true);
 
         if ($request->filled('semester')) {
@@ -123,3 +120,4 @@ class StudentController extends Controller
 
         return view('student.print', compact('student', 'grades', 'gpa', 'signatories'));
     }
+}
