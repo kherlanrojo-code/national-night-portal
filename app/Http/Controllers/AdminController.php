@@ -253,28 +253,28 @@ class AdminController extends Controller
     /**
      * Incoming Grades for Admin Approval
      */
-    public function incomingGrades()
-{
-    // PostgreSQL requires 'true' and 'false' instead of 1 and 0
-    $incomingGrades = Grade::where('is_submitted_to_admin', true)
-                           ->where('is_published', false)
-                           ->orderBy('created_at', 'asc')
-                           ->get()
-                           ->groupBy('lrn');
+   public function incomingGrades()
+    {
+        // FIX: Use DB::raw('true') and ('false') for PostgreSQL compatibility
+        $incomingGrades = \App\Models\Grade::where('is_submitted_to_admin', DB::raw('true'))
+                               ->where('is_published', DB::raw('false'))
+                               ->orderBy('created_at', 'asc')
+                               ->get()
+                               ->groupBy('lrn');
 
-    return view('admin.incoming_grades', compact('incomingGrades'));
-}
+        return view('admin.incoming_grades', compact('incomingGrades'));
+    }
 
-   public function forwardToStudent($lrn)
-{
-    Grade::where('lrn', $lrn)
-        ->where('is_submitted_to_admin', true)
-        ->where('is_published', false) // Only update if not already published
-        ->update(['is_published' => true]);
+    public function forwardToStudent($lrn)
+    {
+        // FIX: Use DB::raw for both the WHERE clause and the UPDATE values
+        \App\Models\Grade::where('lrn', $lrn)
+            ->where('is_submitted_to_admin', DB::raw('true'))
+            ->where('is_published', DB::raw('false'))
+            ->update(['is_published' => DB::raw('true')]);
 
-    return redirect()->back()->with('success', 'Grades published!');
-}
-
+        return redirect()->back()->with('success', 'Grades published to student portal!');
+    }
     /**
      * Generate PDF/Print Report
      */
@@ -319,38 +319,27 @@ class AdminController extends Controller
         return back()->with('success', 'Signatories updated successfully for all grade forms!');
     }
     
-public function monitoring(Request $request)
-{
-    // Get the term from the dropdown (e.g., '1st term')
-    $term = $request->get('term', '1st term');
-    
-    // Set how many subjects each student is supposed to have per term
-    $subjectsPerStudent = 6; 
+public function monitoring()
+    {
+        // ... (keep the top part of your code the same until you get to the map function)
 
-    $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')
-        ->get()
-        ->map(function($teacher) use ($term, $subjectsPerStudent) {
-            
-            // 1. Get the list of LRNs for students belonging to this teacher
-            $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
-            $studentCount = $studentIds->count();
+        $teachers = TeacherIdentity::where('position', 'Teacher')->get()->map(function($teacher) use ($term, $subjectsCount) {
+            $studentIds = StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
+            $totalExpectedGrades = $studentIds->count() * $subjectsCount;
 
-            // 2. Calculate the Goal: (Total Students * Subjects per Student)
-            $totalExpectedGrades = $studentCount * $subjectsPerStudent;
-
-            // 3. Count grades that are actually SENT (is_submitted_to_admin = true)
+            // FIX: Use DB::raw('false') and ('true') for the count queries
+            // 3. Count grades that are actually SENT
             $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
                 ->where('semester', $term)
-                ->where('is_submitted_to_admin', true)
+                ->where('is_submitted_to_admin', DB::raw('true'))
                 ->count();
 
-            // 4. Count grades that are input but NOT SENT (Drafts/Waiting for projects)
+            // 4. Count grades that are input but NOT SENT (Drafts)
             $savedGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
                 ->where('semester', $term)
-                ->where('is_submitted_to_admin', false)
+                ->where('is_submitted_to_admin', DB::raw('false'))
                 ->count();
 
-            // Attach counts to the teacher object for the Blade file
             $teacher->expected_total = $totalExpectedGrades;
             $teacher->actual_sent = $sentGrades;
             $teacher->has_drafts = ($savedGrades > 0);
@@ -358,7 +347,7 @@ public function monitoring(Request $request)
             return $teacher;
         });
 
-    return view('admin.monitoring', compact('teachers', 'term'));
-}
+        return view('admin.monitoring', compact('teachers', 'term'));
+    }
 
 }
