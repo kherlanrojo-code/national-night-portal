@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\TeacherIdentity;
 use App\Models\StudentIdentity;
+use Illuminate\Support\Facades\DB; 
 
 class AuthController extends Controller
 {
@@ -127,32 +128,39 @@ public function login(Request $request)
         return back()->with('error', 'No record found matching these credentials.');
     }
 
-    public function registerAccount(Request $request)
-    {
-        $request->validate([
-            'username' => 'required|unique:users',
-            'password' => 'required|min:4|confirmed',
-            'role'     => 'required',
-            'identifier' => 'required',
-        ]);
+   // Ensure this is at the very top of your file
 
-        User::create([
-            'username'   => $request->username,
-            'password'   => Hash::make($request->password),
-            'role'       => strtolower($request->role), 
-            'identifier' => $request->identifier,       
-        ]);
 
-        $role = strtolower($request->role);
-        
-        if ($role === 'teacher' || $role === 'admin') {
-            TeacherIdentity::where('employee_id', $request->identifier)->update(['is_active' => true]);
-        } else {
-            StudentIdentity::where('lrn', $request->identifier)->update(['is_active' => true]);
-        }
+public function registerAccount(Request $request)
+{
+    $request->validate([
+        'username' => 'required|unique:users',
+        'password' => 'required|min:4|confirmed',
+        'role'     => 'required',
+        'identifier' => 'required',
+    ]);
 
-        return redirect()->route('login')->with('success', 'Account activated!');
+    User::create([
+        'username'   => $request->username,
+        'password'   => Hash::make($request->password),
+        'role'       => strtolower($request->role), 
+        'identifier' => $request->identifier,       
+    ]);
+
+    $role = strtolower($request->role);
+    
+    // Use DB::raw('true') to force PostgreSQL to accept the boolean
+    if ($role === 'teacher' || $role === 'admin') {
+        TeacherIdentity::where('employee_id', $request->identifier)
+            ->update(['is_active' => DB::raw('true')]);
+    } else {
+        StudentIdentity::where('lrn', $request->identifier)
+            ->update(['is_active' => DB::raw('true')]);
     }
+
+    // This is the line that will take you to the login form
+    return redirect()->route('login')->with('success', 'Account activated!');
+}
 
     public function logout()
     {
