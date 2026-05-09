@@ -17,9 +17,14 @@ class Grade extends Model
         'is_published'
     ];
 
-    // FIX: Tells PostgreSQL these are Booleans, not Integers
     protected $casts = [
         'is_submitted_to_admin' => 'boolean',
         'is_published' => 'boolean',
     ];
+
+    // Add this helper to prevent "N/A"
+    public function getDisplayCodeAttribute()
+    {
+        return $this->subject_code ?? 'No Code';
+    }
 }
