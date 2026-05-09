@@ -82,7 +82,8 @@ class StudentController extends Controller
         $student = StudentIdentity::where('lrn', $lrn)->first();
         if (!$student) { abort(404); }
 
-        $query = Grade::where('lrn', $lrn)->where('is_published', true);
+        // This syntax forces PostgreSQL to treat it as a boolean
+        $query = Grade::where('lrn', $lrn)->whereRaw('is_published = true');
 
         if ($request->filled('semester')) {
             $query->where('semester', $request->semester);
@@ -104,7 +105,8 @@ class StudentController extends Controller
         $student = StudentIdentity::where('lrn', $lrn)->first();
         if (!$student) { abort(404); }
 
-        $query = Grade::where('lrn', $lrn)->where('is_published', true);
+        // This syntax forces PostgreSQL to treat it as a boolean
+        $query = Grade::where('lrn', $lrn)->whereRaw('is_published = true');
 
         if ($request->filled('semester')) {
             $query->where('semester', $request->semester);
