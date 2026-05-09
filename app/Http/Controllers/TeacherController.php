@@ -77,27 +77,42 @@ class TeacherController extends Controller
     /**
      * Handles Grade Submission - Updated to include Subject Code
      */
-    public function submitGrade(Request $request)
+  public function submitGrade(Request $request)
 {
     $request->validate([
         'lrn' => 'required',
-        'subject_id' => 'required|exists:subjects,id',
-        'grade' => 'required|numeric|min:0|max:100',
-        'quarter' => 'required' 
+        'subject_id' => 'required',
+        'grade' => 'required|numeric',
+        'quarter' => 'required'
     ]);
 
     $subject = \App\Models\Subject::find($request->subject_id);
+    if (!$subject) {
+        return redirect()->back()->with('error', 'Subject not found.');
+    }
 
-    // IMPROVED LOGIC: Check if this EXACT subject AND term combination exists for this student
+    // FIX: Check if the record exists using the column 'subject' instead of 'subject_code'
+    // because 'subject_code' is missing in your database.
     $exists = \App\Models\Grade::where('lrn', $request->lrn)
-        ->where('subject_code', $subject->code)
+        ->where('subject', $subject->name) // Match by subject name
         ->where('semester', $request->quarter)
         ->exists();
 
     if ($exists) {
-        return redirect()->back()->with('error', 'Grade for ' . $subject->code . ' in ' . $request->quarter . ' is already recorded.');
+        return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
     }
 
+    \App\Models\Grade::create([
+        'lrn' => $request->lrn,
+        'subject' => $subject->name, 
+        // REMOVED 'subject_code' here because it causes the error
+        'grade' => $request->grade,
+        'semester' => $request->quarter,
+        'is_published' => true // Use true for PostgreSQL
+    ]);
+
+    return redirect()->back()->with('success', 'Grade submitted successfully!');
+}
     \App\Models\Grade::create([
         'lrn' => $request->lrn,
         'subject' => $subject->name, 
