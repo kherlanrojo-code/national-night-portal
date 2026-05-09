@@ -365,12 +365,12 @@
         document.getElementById(id).classList.toggle('hidden');
     }
 
-   function openGradeModal(lrn, name, studentLevel) {
+  function openGradeModal(lrn, name, studentLevel) {
     // 1. Set basic student info
     document.getElementById('targetLRN').value = lrn;
     document.getElementById('targetName').innerText = name;
     
-    // 2. FILTER SUBJECT DROPDOWN (New logic)
+    // 2. FILTER SUBJECT DROPDOWN (Matches student level to subject level)
     const subjectSelect = document.getElementById('subjectSelect');
     const options = subjectSelect.options;
 
@@ -378,7 +378,7 @@
         const option = options[i];
         const subjectLevel = option.getAttribute('data-level');
 
-        // Only show subjects that match the student's grade level
+        // Only show subjects that match the student's grade level (e.g. "Grade 7")
         if (subjectLevel === studentLevel || option.value === "") {
             option.style.display = "block";
         } else {
@@ -387,7 +387,7 @@
     }
     subjectSelect.value = ""; // Reset dropdown selection
 
-    // 3. GRADE HISTORY LOGIC (Your original code)
+    // 3. GRADE HISTORY LOGIC (Keeps all your existing features)
     const historyContainer = document.getElementById('gradeHistoryContainer');
     const studentGrades = allExistingGrades.filter(g => g.lrn == lrn);
     historyContainer.innerHTML = '';
@@ -403,6 +403,7 @@
             const matchingSubject = subjectsList.find(s => s.name === grade.subject);
             const displayCode = grade.subject_code || (matchingSubject ? matchingSubject.code : 'N/A');
 
+            // FIXED: Using backticks (`) here to allow multi-line HTML and ${variables}
             historyContainer.innerHTML += `
                 <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm mb-3">
                     <div class="flex justify-between items-center">
