@@ -101,25 +101,28 @@ class StudentController extends Controller
     }
 
     public function printGrades(Request $request, $lrn)
-    {
-        $student = StudentIdentity::where('lrn', $lrn)->first();
-        if (!$student) { abort(404); }
+{
+    $student = \App\Models\StudentIdentity::where('lrn', $lrn)->first();
+    if (!$student) { abort(404); }
 
-        // This syntax forces PostgreSQL to treat it as a boolean
-        $query = Grade::where('lrn', $lrn)->whereRaw('is_published = true');
+    // Use a Join to pull the code from the subjects table based on the subject name
+    $query = \App\Models\Grade::where('grades.lrn', $lrn)
+        ->whereRaw('is_published = true')
+        ->leftJoin('subjects', 'grades.subject', '=', 'subjects.name')
+        ->select('grades.*', 'subjects.code as subject_code'); // This creates the 'subject_code' variable
 
-        if ($request->filled('semester')) {
-            $query->where('semester', $request->semester);
-        }
-
-        $grades = $query->get();
-        $gpa = $grades->count() > 0 ? $grades->avg('grade') : 0;
-
-        $signatories = (object)[
-            'registrar' => DB::table('settings')->where('key', 'registrar')->value('value'),
-            'school_head' => DB::table('settings')->where('key', 'school_head')->value('value')
-        ];
-
-        return view('student.print', compact('student', 'grades', 'gpa', 'signatories'));
+    if ($request->filled('semester')) {
+        $query->where('grades.semester', $request->semester);
     }
+
+    $grades = $query->get();
+    $gpa = $grades->count() > 0 ? $grades->avg('grade') : 0;
+
+    $signatories = (object)[
+        'registrar' => \DB::table('settings')->where('key', 'registrar')->value('value'),
+        'school_head' => \DB::table('settings')->where('key', 'school_head')->value('value')
+    ];
+
+    return view('student.print', compact('student', 'grades', 'gpa', 'signatories'));
+}
 }
