@@ -63,7 +63,7 @@ class TeacherController extends Controller
             'dob' => $request->dob,
             'level' => $request->level,
             'adviser_id' => $teacher->id, 
-            'is_active' => true, 
+            'is_active' => DB::raw('true'),
         ]);
 
         return back()->with('success', 'Student enrolled successfully!');
