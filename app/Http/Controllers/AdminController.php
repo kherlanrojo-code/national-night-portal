@@ -119,26 +119,30 @@ class AdminController extends Controller
     /**
      * Authorize a new teacher with separated names and position
      */
-    public function storeTeacher(Request $request)
-    {
-        $request->validate([
-            'employee_id' => 'required|unique:teacher_identities',
-            'first_name' => 'required|string|max:255',
-            'last_name'  => 'required|string|max:255',
-            'position'   => 'required|string',
-        ]);
-
-        TeacherIdentity::create([
-            'employee_id' => $request->employee_id,
-            'first_name'  => $request->first_name,
-            'middle_name' => $request->middle_name,
-            'last_name'   => $request->last_name,
-            'position'    => $request->position,
-            'is_active'   => DB::raw('false'), // This forces PostgreSQL to see the actual boolean keyword
-        ]);
-
-        return redirect()->back()->with('success', 'Teacher identity authorized successfully!');
-    }
+        public function storeTeacher(Request $request)
+            {
+                $request->validate([
+                    'employee_id' => 'required|unique:teacher_identities',
+                    'first_name' => 'required|string|max:255',
+                    'last_name'  => 'required|string|max:255',
+                    'position'   => 'required|string',
+                ]);
+            
+                // Create the full name string
+                $fullname = trim($request->first_name . ' ' . ($request->middle_name ?? '') . ' ' . $request->last_name);
+            
+                TeacherIdentity::create([
+                    'employee_id' => $request->employee_id,
+                    'fullname'    => $fullname, // Add this line!
+                    'first_name'  => $request->first_name,
+                    'middle_name' => $request->middle_name,
+                    'last_name'   => $request->last_name,
+                    'position'    => $request->position,
+                    'is_active'   => DB::raw('false'),
+                ]);
+            
+                return redirect()->back()->with('success', 'Teacher identity authorized successfully!');
+            }
 
     /**
      * Update Teacher Details (Edit Function)
