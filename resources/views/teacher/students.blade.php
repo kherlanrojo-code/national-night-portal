@@ -284,7 +284,9 @@
                 <select name="subject_id" id="subjectSelect" required class="w-full border-slate-200 border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                     <option value="" disabled selected>-- Choose Subject --</option>
                     @foreach($subjects as $subject)
-                        <option value="{{ $subject->id }}">{{ $subject->code }} - {{ $subject->name }}</option>
+                        <option value="{{ $subject->id }}" data-level="{{ $subject->level }}">
+                            [{{ $subject->code }}] {{ strtoupper($subject->name) }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -363,59 +365,77 @@
         document.getElementById(id).classList.toggle('hidden');
     }
 
-   function openGradeModal(lrn, name) {
-            document.getElementById('targetLRN').value = lrn;
-            document.getElementById('targetName').innerText = name;
-            const historyContainer = document.getElementById('gradeHistoryContainer');
-            
-            // Filter grades for this specific student
-            const studentGrades = allExistingGrades.filter(g => g.lrn == lrn);
-            historyContainer.innerHTML = '';
-            
-            if (studentGrades.length > 0) {
-                studentGrades.forEach(grade => {
-                    const isSent = grade.is_submitted_to_admin == 1;
-                    const statusIcon = isSent 
-                        ? '<span class="text-[9px] text-emerald-500 font-bold ml-2"><i class="fas fa-check-double"></i> SENT</span>' 
-                        : '<span class="text-[9px] text-orange-400 font-bold ml-2"><i class="fas fa-clock"></i> PENDING</span>';
-        
-                    // Use subject_code if available, otherwise try to match from the subjects list
-                    const subjectsList = @json($subjects);
-                    const matchingSubject = subjectsList.find(s => s.name === grade.subject);
-                    const displayCode = grade.subject_code || (matchingSubject ? matchingSubject.code : 'N/A');
-        
-                    historyContainer.innerHTML += `
-                        <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm mb-3">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-[10px] text-indigo-500 font-black uppercase tracking-tighter mb-0.5">
-                                        ${displayCode}
-                                    </p>
-                                    <h4 class="text-slate-800 font-bold capitalize text-sm leading-none">${grade.subject}</h4>
-                                    <div class="flex items-center mt-2">
-                                        <span class="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md font-black uppercase tracking-wider">
-                                            ${grade.semester || '1st Term'}
-                                        </span>
-                                        ${statusIcon}
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-[8px] text-slate-400 font-bold block uppercase tracking-tighter">Final Grade</span>
-                                    <span class="text-emerald-600 font-black text-lg">${parseFloat(grade.grade).toFixed(2)}</span>
-                                </div>
+   function openGradeModal(lrn, name, studentLevel) {
+    // 1. Set basic student info
+    document.getElementById('targetLRN').value = lrn;
+    document.getElementById('targetName').innerText = name;
+    
+    // 2. FILTER SUBJECT DROPDOWN (New logic)
+    const subjectSelect = document.getElementById('subjectSelect');
+    const options = subjectSelect.options;
+
+    for (let i = 0; i < options.length; i++) {
+        const option = options[i];
+        const subjectLevel = option.getAttribute('data-level');
+
+        // Only show subjects that match the student's grade level
+        if (subjectLevel === studentLevel || option.value === "") {
+            option.style.display = "block";
+        } else {
+            option.style.display = "none";
+        }
+    }
+    subjectSelect.value = ""; // Reset dropdown selection
+
+    // 3. GRADE HISTORY LOGIC (Your original code)
+    const historyContainer = document.getElementById('gradeHistoryContainer');
+    const studentGrades = allExistingGrades.filter(g => g.lrn == lrn);
+    historyContainer.innerHTML = '';
+    
+    if (studentGrades.length > 0) {
+        studentGrades.forEach(grade => {
+            const isSent = grade.is_submitted_to_admin == 1;
+            const statusIcon = isSent 
+                ? '<span class="text-[9px] text-emerald-500 font-bold ml-2"><i class="fas fa-check-double"></i> SENT</span>' 
+                : '<span class="text-[9px] text-orange-400 font-bold ml-2"><i class="fas fa-clock"></i> PENDING</span>';
+
+            const subjectsList = @json($subjects);
+            const matchingSubject = subjectsList.find(s => s.name === grade.subject);
+            const displayCode = grade.subject_code || (matchingSubject ? matchingSubject.code : 'N/A');
+
+            historyContainer.innerHTML += `
+                <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm mb-3">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] text-indigo-500 font-black uppercase tracking-tighter mb-0.5">
+                                ${displayCode}
+                            </p>
+                            <h4 class="text-slate-800 font-bold capitalize text-sm leading-none">${grade.subject}</h4>
+                            <div class="flex items-center mt-2">
+                                <span class="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md font-black uppercase tracking-wider">
+                                    ${grade.semester || '1st Term'}
+                                </span>
+                                ${statusIcon}
                             </div>
                         </div>
-                    `;
-                });
-            } else {
-                historyContainer.innerHTML = `
-                    <div class="text-center py-6">
-                        <i class="fas fa-folder-open text-slate-200 text-2xl mb-2 block"></i>
-                        <p class="text-[11px] text-slate-400 italic font-medium">No grades recorded yet.</p>
-                    </div>`;
-            }
-            toggleModal('gradeModal');
-        }
+                        <div class="text-right">
+                            <span class="text-[8px] text-slate-400 font-bold block uppercase tracking-tighter">Final Grade</span>
+                            <span class="text-emerald-600 font-black text-lg">${parseFloat(grade.grade).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        historyContainer.innerHTML = `
+            <div class="text-center py-6">
+                <i class="fas fa-folder-open text-slate-200 text-2xl mb-2 block"></i>
+                <p class="text-[11px] text-slate-400 italic font-medium">No grades recorded yet.</p>
+            </div>`;
+    }
+    
+    toggleModal('gradeModal');
+}
 
     function updateGradeOptions() {
         const mainLevel = document.getElementById('mainLevel').value;
