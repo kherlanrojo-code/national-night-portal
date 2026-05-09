@@ -103,16 +103,17 @@ class TeacherController extends Controller
     }
 
    public function sendToAdmin($lrn)
-    {
-        \App\Models\Grade::where('lrn', $lrn)
-            ->where('is_submitted_to_admin', false) 
-            ->update([
-                'is_submitted_to_admin' => DB::raw('true'),
-                'is_published' => DB::raw('false')
-            ]);
+{
+    // Use DB::raw('false') for the query and DB::raw for the updates
+    \App\Models\Grade::where('lrn', $lrn)
+        ->where('is_submitted_to_admin', DB::raw('false')) 
+        ->update([
+            'is_submitted_to_admin' => DB::raw('true'),
+            'is_published' => DB::raw('false')
+        ]);
 
-        return redirect()->back()->with('success', 'Grades sent! Check Admin Grade Requests.');
-    }
+    return redirect()->back()->with('success', 'Grades sent! Check Admin Grade Requests.');
+}
 
     public function updateStudent(Request $request)
     {
