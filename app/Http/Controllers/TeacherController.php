@@ -95,8 +95,8 @@ class TeacherController extends Controller
             'subject' => $subject->name, 
             'grade' => $request->grade,
             'semester' => $request->quarter,
-            'is_submitted_to_admin' => false, 
-            'is_published' => false
+            'is_submitted_to_admin' => DB::raw('false'), 
+            'is_published' => DB::raw('false')
         ]);
 
         return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
