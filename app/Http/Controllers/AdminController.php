@@ -71,21 +71,25 @@ class AdminController extends Controller
     /**
      * Store a new subject with Code and Name (Validated)
      */
-    public function storeSubject(Request $request) 
-    {
-        // This part prevents the Error 500 by checking the DB first
-        $request->validate([
-            'subject_code' => 'required|unique:subjects,code', 
-            'subject_name' => 'required|string',
-        ]);
+   public function storeSubject(Request $request)
+{
+    // 1. Validate the incoming data
+    $request->validate([
+        'code' => 'required',
+        'name' => 'required',
+        'level' => 'required', // Add this
+    ]);
 
-        Subject::create([
-            'code' => $request->subject_code,
-            'name' => $request->subject_name,
-        ]);
+    // 2. Create the subject with the level
+    Subject::create([
+        'code' => $request->code,
+        'name' => $request->name,
+        'level' => $request->level, // This is the key part!
+        'status' => 'ACTIVE',
+    ]);
 
-        return back()->with('success', 'New subject added to the curriculum!');
-    }
+    return back()->with('success', 'Subject created successfully!');
+}
 
     public function deleteSubject($id)
 {
