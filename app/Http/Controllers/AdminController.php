@@ -73,22 +73,20 @@ class AdminController extends Controller
      */
    public function storeSubject(Request $request)
 {
-    // 1. Validate the incoming data
     $request->validate([
         'code' => 'required',
         'name' => 'required',
-        'level' => 'required', // Add this
+        'level' => 'required', // This must match the <select name="level"> in your form
     ]);
 
-    // 2. Create the subject with the level
     Subject::create([
         'code' => $request->code,
         'name' => $request->name,
-        'level' => $request->level, // This is the key part!
+        'level' => $request->level, 
         'status' => 'ACTIVE',
     ]);
 
-    return back()->with('success', 'Subject created successfully!');
+    return back()->with('success', 'Subject added successfully!');
 }
 
     public function deleteSubject($id)
