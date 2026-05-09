@@ -321,21 +321,21 @@ class AdminController extends Controller
     
 public function monitoring()
     {
-        // ... (keep the top part of your code the same until you get to the map function)
+        // FIX: Define $term and $subjectsCount before using them in the map
+        $term = '1st Term'; // Or however you determine the current term
+        $subjectsCount = Subject::count();
 
         $teachers = TeacherIdentity::where('position', 'Teacher')->get()->map(function($teacher) use ($term, $subjectsCount) {
             $studentIds = StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
             $totalExpectedGrades = $studentIds->count() * $subjectsCount;
 
-            // FIX: Use DB::raw('false') and ('true') for the count queries
-            // 3. Count grades that are actually SENT
-            $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+            // Use DB::raw for PostgreSQL
+            $sentGrades = Grade::whereIn('lrn', $studentIds)
                 ->where('semester', $term)
                 ->where('is_submitted_to_admin', DB::raw('true'))
                 ->count();
 
-            // 4. Count grades that are input but NOT SENT (Drafts)
-            $savedGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+            $savedGrades = Grade::whereIn('lrn', $studentIds)
                 ->where('semester', $term)
                 ->where('is_submitted_to_admin', DB::raw('false'))
                 ->count();
