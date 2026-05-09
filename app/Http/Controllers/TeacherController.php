@@ -1,0 +1,144 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\StudentIdentity;
+use App\Models\Grade;
+use App\Models\TeacherIdentity;
+use App\Models\Subject; 
+use Illuminate\Http\Request;
+
+class TeacherController extends Controller
+{
+    /**
+     * Display the list of students for a specific adviser.
+     */
+    public function studentList($adviser_id, $level = null)
+    {
+        $teacher = TeacherIdentity::where('employee_id', $adviser_id)->first();
+
+        if (!$teacher) {
+            return redirect()->route('login')->with('error', 'Session expired.');
+        }
+
+        $query = StudentIdentity::where('adviser_id', $teacher->id);
+
+        if ($level) {
+            $query->where('level', $level);
+        }
+
+        $students = $query->get();
+        
+        $allGrades = Grade::whereIn('lrn', $students->pluck('lrn'))
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $subjects = Subject::orderBy('name', 'asc')->get();
+
+        return view('teacher.students', compact('students', 'subjects', 'allGrades'));
+    }
+
+    /**
+     * Handle adding a student to the teacher's list.
+     */
+    public function storeStudent(Request $request) {
+        $request->validate([
+            'lrn' => 'required|digits:12|unique:student_identities,lrn',
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'dob' => 'required|date',
+            'level' => 'required',
+            'adviser_id' => 'required' 
+        ]);
+
+        $teacher = TeacherIdentity::where('employee_id', $request->adviser_id)->first();
+
+        if (!$teacher) {
+            return back()->with('error', 'Teacher record not found.');
+        }
+
+        StudentIdentity::create([
+            'lrn' => $request->lrn,
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name ?? '', 
+            'last_name' => $request->last_name,
+            'fullname' => trim("{$request->first_name} {$request->middle_name} {$request->last_name}"),
+            'dob' => $request->dob,
+            'level' => $request->level,
+            'adviser_id' => $teacher->id, 
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', 'Student enrolled successfully!');
+    }
+
+    /**
+     * Handles Grade Submission - Updated to include Subject Code
+     */
+    public function submitGrade(Request $request)
+{
+    $request->validate([
+        'lrn' => 'required',
+        'subject_id' => 'required|exists:subjects,id',
+        'grade' => 'required|numeric|min:0|max:100',
+        'quarter' => 'required' 
+    ]);
+
+    $subject = \App\Models\Subject::find($request->subject_id);
+
+    // IMPROVED LOGIC: Check if this EXACT subject AND term combination exists for this student
+    $exists = \App\Models\Grade::where('lrn', $request->lrn)
+        ->where('subject_code', $subject->code)
+        ->where('semester', $request->quarter)
+        ->exists();
+
+    if ($exists) {
+        return redirect()->back()->with('error', 'Grade for ' . $subject->code . ' in ' . $request->quarter . ' is already recorded.');
+    }
+
+    \App\Models\Grade::create([
+        'lrn' => $request->lrn,
+        'subject' => $subject->name, 
+        'subject_code' => $subject->code,
+        'grade' => $request->grade,
+        'semester' => $request->quarter, 
+        'is_submitted_to_admin' => 0, 
+    ]);
+
+    return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
+}
+
+  public function sendToAdmin($lrn)
+{
+    
+    \App\Models\Grade::where('lrn', $lrn)
+        ->where('is_submitted_to_admin', 0) // Only target unsubmitted ones
+        ->update([
+            'is_submitted_to_admin' => 1,
+            'is_published' => 0 // Keep as 0 if Admin needs to 'Approve/Publish' them first
+        ]);
+
+    return redirect()->back()->with('success', 'Grades sent! Check Admin Grade Requests.');
+}
+
+    public function updateStudent(Request $request)
+{
+    $request->validate([
+        'student_id' => 'required|exists:student_identities,id',
+        'lrn' => 'required|digits:12',
+        'fullname' => 'required|string|max:255',
+        'level' => 'required|string'
+    ]);
+
+    $student = StudentIdentity::findOrFail($request->student_id);
+    
+    $student->update([
+        'lrn' => $request->lrn,
+        'fullname' => strtoupper($request->fullname), // Keep the name in caps
+        'level' => $request->level,
+    ]);
+
+    return back()->with('success', 'Student information updated successfully!');
+}
+}
+
