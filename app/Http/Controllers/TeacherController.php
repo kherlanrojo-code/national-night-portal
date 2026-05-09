@@ -11,9 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
-    /**
-     * Display the list of students for a specific adviser.
-     */
     public function studentList($adviser_id, $level = null)
     {
         $teacher = TeacherIdentity::where('employee_id', $adviser_id)->first();
@@ -39,9 +36,6 @@ class TeacherController extends Controller
         return view('teacher.students', compact('students', 'subjects', 'allGrades'));
     }
 
-    /**
-     * Handle adding a student to the teacher's list.
-     */
     public function storeStudent(Request $request) {
         $request->validate([
             'lrn' => 'required|digits:12|unique:student_identities,lrn',
@@ -67,15 +61,12 @@ class TeacherController extends Controller
             'dob' => $request->dob,
             'level' => $request->level,
             'adviser_id' => $teacher->id, 
-            'is_active' => true, // Local 1 -> Server true
+            'is_active' => true, 
         ]);
 
         return back()->with('success', 'Student enrolled successfully!');
     }
 
-    /**
-     * Handles Grade Submission - Matches your local logic
-     */
     public function submitGrade(Request $request)
     {
         $request->validate([
@@ -99,7 +90,6 @@ class TeacherController extends Controller
             return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
         }
 
-        // The syntax error was likely here - fixed the brackets and semicolons
         \App\Models\Grade::create([
             'lrn' => $request->lrn,
             'subject' => $subject->name, 
@@ -111,39 +101,19 @@ class TeacherController extends Controller
 
         return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
     }
-        // Saving with local logic: includes admin submission status
-        \App\Models\Grade::create([
-            \App\Models\Grade::create([
-        'lrn' => $request->lrn,
-        'subject' => $subject->name, 
-        // 'subject_code' => $subject->code, // Leave commented if column missing in DB
-        'grade' => $request->grade,
-        'semester' => $request->quarter,
-        'is_submitted_to_admin' => false, 
-        'is_published' => false,         
-    ]);
 
-        return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
-    }
-
-    /**
-     * Send grades to Admin - Matches your local logic
-     */
     public function sendToAdmin($lrn)
     {
         \App\Models\Grade::where('lrn', $lrn)
             ->where('is_submitted_to_admin', false) 
             ->update([
-                'is_submitted_to_admin' => true, // Local 1 -> Server true
-                'is_published' => false          // Local 0 -> Server false
+                'is_submitted_to_admin' => true,
+                'is_published' => false 
             ]);
 
         return redirect()->back()->with('success', 'Grades sent! Check Admin Grade Requests.');
     }
 
-    /**
-     * Update Student Info - Matches your local logic
-     */
     public function updateStudent(Request $request)
     {
         $request->validate([
