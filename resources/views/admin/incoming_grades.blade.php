@@ -56,7 +56,13 @@
                         @foreach($grades as $grade)
                         <tr>
                             <td class="px-6 py-4 text-sm font-medium text-slate-700">
-                                <span class="font-bold text-slate-900">{{ $grade->subject_code ?? 'N/A' }}</span> 
+                                @php
+                                    // Look up the subject code manually since the column doesn't exist in the grades table
+                                    $actualSubject = \App\Models\Subject::where('name', $grade->subject)->first();
+                                @endphp
+                                <span class="font-bold text-slate-900">
+                                    {{ $actualSubject->code ?? 'N/A' }}
+                                </span> 
                                 - {{ $grade->subject }}
                             </td>
                             <td class="px-6 py-4 text-sm font-bold {{ $grade->grade < 75 ? 'text-red-600' : 'text-slate-800' }}">
