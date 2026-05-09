@@ -14,7 +14,7 @@ class Grade extends Model
         'semester', 
         'quarter',
         'is_submitted_to_admin',
-        'is_published' // Added this missing field
+        'is_published'
     ];
 
     // FIX: Tells PostgreSQL these are Booleans, not Integers
