@@ -102,14 +102,15 @@ class TeacherController extends Controller
 
         // Saving with local logic: includes admin submission status
         \App\Models\Grade::create([
-            'lrn' => $request->lrn,
-            'subject' => $subject->name, 
-            // 'subject_code' => $subject->code, // Uncomment this only if you add the column to DB
-            'grade' => $request->grade,
-            'semester' => $request->quarter,
-            'is_submitted_to_admin' => false, // Local 0 -> Server false
-            'is_published' => false,         // Local 0 -> Server false
-        ]);
+            \App\Models\Grade::create([
+        'lrn' => $request->lrn,
+        'subject' => $subject->name, 
+        // 'subject_code' => $subject->code, // Leave commented if column missing in DB
+        'grade' => $request->grade,
+        'semester' => $request->quarter,
+        'is_submitted_to_admin' => false, 
+        'is_published' => false,         
+    ]);
 
         return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
     }
