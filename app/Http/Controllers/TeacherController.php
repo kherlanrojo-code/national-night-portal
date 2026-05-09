@@ -102,13 +102,13 @@ class TeacherController extends Controller
         return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
     }
 
-    public function sendToAdmin($lrn)
+   public function sendToAdmin($lrn)
     {
         \App\Models\Grade::where('lrn', $lrn)
             ->where('is_submitted_to_admin', false) 
             ->update([
-                'is_submitted_to_admin' => true,
-                'is_published' => false 
+                'is_submitted_to_admin' => DB::raw('true'),
+                'is_published' => DB::raw('false')
             ]);
 
         return redirect()->back()->with('success', 'Grades sent! Check Admin Grade Requests.');
