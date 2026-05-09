@@ -321,32 +321,38 @@ class AdminController extends Controller
     
 public function monitoring(Request $request)
 {
-    // 1. Force the term to lowercase so it matches regardless of how it was typed
+    // 1. Force lowercase to prevent "1st Term" vs "1st term" issues
     $term = strtolower($request->get('term', '1st term'));
     
-    // 2. Using your local logic of 6 subjects per student
+    // 2. Logic: 6 subjects per student
     $subjectsPerStudent = 6; 
 
     $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')
         ->get()
         ->map(function($teacher) use ($term, $subjectsPerStudent) {
             
-            $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
-            $studentCount = $studentIds->count();
+            // 3. Convert to array to ensure the SQL 'IN' clause works on Live
+            $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn')->toArray();
+            $studentCount = count($studentIds);
 
-            // Goal: (Total Students * 6 Subjects)
+            // Goal calculation
             $totalExpectedGrades = $studentCount * $subjectsPerStudent;
 
-            // FIX: PostgreSQL needs LOWER() for the term and DB::raw for the boolean
-            $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
-                ->whereRaw('LOWER(semester) = ?', [$term])
-                ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('true'))
-                ->count();
+            if ($studentCount > 0) {
+                // FIX: Use string-based whereRaw for booleans to avoid PostgreSQL operator errors
+                $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+                    ->whereRaw('LOWER(semester) = ?', [$term])
+                    ->whereRaw('is_submitted_to_admin::text = ?', ['true'])
+                    ->count();
 
-            $savedGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
-                ->whereRaw('LOWER(semester) = ?', [$term])
-                ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('false'))
-                ->count();
+                $savedGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+                    ->whereRaw('LOWER(semester) = ?', [$term])
+                    ->whereRaw('is_submitted_to_admin::text = ?', ['false'])
+                    ->count();
+            } else {
+                $sentGrades = 0;
+                $savedGrades = 0;
+            }
 
             $teacher->expected_total = $totalExpectedGrades;
             $teacher->actual_sent = $sentGrades;
