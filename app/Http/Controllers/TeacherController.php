@@ -32,10 +32,9 @@ class TeacherController extends Controller
         ->get();
 
     // Fetch all subjects so we can filter them in the modal via JavaScript
-    $subjects = Subject::where('status', 'ACTIVE')
-        ->orderBy('level', 'asc')
-        ->orderBy('name', 'asc')
-        ->get();
+    $subjects = Subject::orderBy('level', 'asc')
+    ->orderBy('name', 'asc')
+    ->get();
 
     return view('teacher.students', compact('students', 'subjects', 'allGrades'));
 }
