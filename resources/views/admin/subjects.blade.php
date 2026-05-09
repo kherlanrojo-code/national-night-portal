@@ -87,7 +87,18 @@
                             </div>
                         @endif
                     </div>
-                    <tbody class="divide-y divide-slate-50">
+                   <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-[0.2em] border-b border-slate-100">
+                        <th class="px-10 py-6 font-black">Code</th>
+                        <th class="px-10 py-6 font-black">Learning Area</th>
+                        <th class="px-10 py-6 font-black text-center">Level</th>
+                        <th class="px-10 py-6 font-black text-center">Status</th>
+                        <th class="px-10 py-6 font-black text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
                     @forelse($subjects as $subject)
                     <tr class="group hover:bg-slate-50/80 transition-all">
                         <td class="px-10 py-5">
@@ -95,27 +106,25 @@
                                 {{ $subject->code }}
                             </span>
                         </td>
-                        <td class="px-10 py-5 font-bold text-slate-700">{{ $subject->name }}</td>
-                        
-                        <td class="px-10 py-5 text-center font-bold text-blue-500 text-xs">
-                            {{ $subject->level ?? 'N/A' }}
-                        </td>
-                
+                        <td class="px-10 py-5 font-bold text-slate-700 capitalize">{{ $subject->name }}</td>
+                        <td class="px-10 py-5 text-center font-bold text-indigo-500 text-xs">{{ $subject->level ?? 'N/A' }}</td>
                         <td class="px-10 py-5 text-center">
                             <span class="px-3 py-1 bg-green-100 text-green-600 text-[10px] font-black rounded-lg border border-green-200 uppercase">Active</span>
                         </td>
                         <td class="px-10 py-5 text-right">
-                            <button onclick="confirmDelete({{ $subject->id }}, '{{ $subject->name }}')" 
-                                    class="text-slate-400 hover:text-red-600 hover:bg-red-50 w-10 h-10 rounded-2xl inline-flex items-center justify-center transition-all">
+                            <button onclick="confirmDelete({{ $subject->id }}, '{{ $subject->name }}')" class="text-slate-400 hover:text-red-600 hover:bg-red-50 w-10 h-10 rounded-2xl inline-flex items-center justify-center transition-all">
                                 <i class="fas fa-trash text-xs"></i>
                             </button>
                         </td>
                     </tr>
                     @empty
+                    <tr>
+                        <td colspan="5" class="px-10 py-20 text-center text-slate-400 font-bold font-italic">No subjects defined yet.</td>
+                    </tr>
                     @endforelse
                 </tbody>
-                </table>
-            </div>
+            </table>
+        </div>
         </div>
     </div>
 
