@@ -10,14 +10,15 @@ class TeacherIdentity extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = [
-        'employee_id',
-        'first_name',
-        'middle_name',
-        'last_name',
-        'position',
-        'is_active',
-    ];
+   protected $fillable = [
+    'employee_id',
+    'fullname', // Add this!
+    'first_name',
+    'middle_name',
+    'last_name',
+    'position',
+    'is_active',
+];
 
     // This must be INSIDE the class braces
     protected $casts = [
