@@ -364,54 +364,58 @@
     }
 
    function openGradeModal(lrn, name) {
-    document.getElementById('targetLRN').value = lrn;
-    document.getElementById('targetName').innerText = name;
-    const historyContainer = document.getElementById('gradeHistoryContainer');
-    
-    // Filter grades for this specific student
-    const studentGrades = allExistingGrades.filter(g => g.lrn == lrn);
-    historyContainer.innerHTML = '';
-    
-    if (studentGrades.length > 0) {
-        studentGrades.forEach(grade => {
-            // Check if the grade was already sent to admin
-            const isSent = grade.is_submitted_to_admin == 1;
-            const statusIcon = isSent 
-                ? '<span class="text-[9px] text-emerald-500 font-bold ml-2"><i class="fas fa-check-double"></i> SENT</span>' 
-                : '<span class="text-[9px] text-orange-400 font-bold ml-2"><i class="fas fa-clock"></i> PENDING</span>';
-
-            historyContainer.innerHTML += `
-                <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm mb-3">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-[10px] text-indigo-500 font-black uppercase tracking-tighter mb-0.5">
-                                ${grade.subject_code || 'N/A'}
-                            </p>
-                            <h4 class="text-slate-800 font-bold capitalize text-sm leading-none">${grade.subject}</h4>
-                            <div class="flex items-center mt-2">
-                                <span class="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md font-black uppercase tracking-wider">
-                                    ${grade.semester}
-                                </span>
-                                ${statusIcon}
+            document.getElementById('targetLRN').value = lrn;
+            document.getElementById('targetName').innerText = name;
+            const historyContainer = document.getElementById('gradeHistoryContainer');
+            
+            // Filter grades for this specific student
+            const studentGrades = allExistingGrades.filter(g => g.lrn == lrn);
+            historyContainer.innerHTML = '';
+            
+            if (studentGrades.length > 0) {
+                studentGrades.forEach(grade => {
+                    const isSent = grade.is_submitted_to_admin == 1;
+                    const statusIcon = isSent 
+                        ? '<span class="text-[9px] text-emerald-500 font-bold ml-2"><i class="fas fa-check-double"></i> SENT</span>' 
+                        : '<span class="text-[9px] text-orange-400 font-bold ml-2"><i class="fas fa-clock"></i> PENDING</span>';
+        
+                    // Use subject_code if available, otherwise try to match from the subjects list
+                    const subjectsList = @json($subjects);
+                    const matchingSubject = subjectsList.find(s => s.name === grade.subject);
+                    const displayCode = grade.subject_code || (matchingSubject ? matchingSubject.code : 'N/A');
+        
+                    historyContainer.innerHTML += `
+                        <div class="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm mb-3">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-[10px] text-indigo-500 font-black uppercase tracking-tighter mb-0.5">
+                                        ${displayCode}
+                                    </p>
+                                    <h4 class="text-slate-800 font-bold capitalize text-sm leading-none">${grade.subject}</h4>
+                                    <div class="flex items-center mt-2">
+                                        <span class="text-[9px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md font-black uppercase tracking-wider">
+                                            ${grade.semester || '1st Term'}
+                                        </span>
+                                        ${statusIcon}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[8px] text-slate-400 font-bold block uppercase tracking-tighter">Final Grade</span>
+                                    <span class="text-emerald-600 font-black text-lg">${parseFloat(grade.grade).toFixed(2)}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="text-[8px] text-slate-400 font-bold block uppercase tracking-tighter">Final Grade</span>
-                            <span class="text-emerald-600 font-black text-lg">${parseFloat(grade.grade).toFixed(2)}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-    } else {
-        historyContainer.innerHTML = `
-            <div class="text-center py-6">
-                <i class="fas fa-folder-open text-slate-200 text-2xl mb-2 block"></i>
-                <p class="text-[11px] text-slate-400 italic font-medium">No grades recorded yet.</p>
-            </div>`;
-    }
-    toggleModal('gradeModal');
-}
+                    `;
+                });
+            } else {
+                historyContainer.innerHTML = `
+                    <div class="text-center py-6">
+                        <i class="fas fa-folder-open text-slate-200 text-2xl mb-2 block"></i>
+                        <p class="text-[11px] text-slate-400 italic font-medium">No grades recorded yet.</p>
+                    </div>`;
+            }
+            toggleModal('gradeModal');
+        }
 
     function updateGradeOptions() {
         const mainLevel = document.getElementById('mainLevel').value;
