@@ -64,11 +64,12 @@
                         <input type="text" name="subject_name" placeholder="Subject Name" required
                                class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all lg:w-64">
                     
-                        <div class="flex gap-2">
-                            <input type="text" name="code" placeholder="Code (e.g., 101)" class="...">
-                            <input type="text" name="name" placeholder="Subject Name" class="...">
+                        <form action="{{ route('admin.storeSubject') }}" method="POST" class="flex gap-2">
+                            @csrf
+                            <input type="text" name="code" placeholder="Code (e.g., 101)" required class="...">
+                            <input type="text" name="name" placeholder="Subject Name" required class="...">
                             
-                            <select name="level" required class="border-slate-200 border p-3 rounded-xl text-sm">
+                            <select name="level" required class="border-slate-200 border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                                 <option value="" disabled selected>Select Level</option>
                                 <option value="Grade 7">Grade 7</option>
                                 <option value="Grade 8">Grade 8</option>
@@ -78,9 +79,8 @@
                                 <option value="Grade 12">Grade 12</option>
                             </select>
                             
-                            <button type="submit" class="...">+ SAVE</button>
-                        </div>
-                        
+                            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-xl">+ SAVE</button>
+                        </form>
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl text-sm font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95">
                             <i class="fas fa-plus mr-2"></i> SAVE
                         </button>
