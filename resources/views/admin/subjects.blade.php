@@ -63,6 +63,17 @@
                         
                         <input type="text" name="subject_name" placeholder="Subject Name" required
                                class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all lg:w-64">
+                    
+                        <select name="level" required
+                                class="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                            <option value="" disabled selected>Select Level</option>
+                            <option value="Grade 7">Grade 7</option>
+                            <option value="Grade 8">Grade 8</option>
+                            <option value="Grade 9">Grade 9</option>
+                            <option value="Grade 10">Grade 10</option>
+                            <option value="Grade 11">Grade 11</option>
+                            <option value="Grade 12">Grade 12</option>
+                        </select>
                         
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl text-sm font-black transition-all shadow-lg shadow-blue-500/25 active:scale-95">
                             <i class="fas fa-plus mr-2"></i> SAVE
@@ -79,14 +90,14 @@
 
             <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
                 <table class="w-full text-left border-collapse">
-                    <thead>
+                   <thead>
                         <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-[0.2em] border-b border-slate-100">
                             <th class="px-10 py-6 font-black">Code</th>
                             <th class="px-10 py-6 font-black">Learning Area</th>
-                            <th class="px-10 py-6 font-black text-center">Status</th>
+                            <th class="px-10 py-6 font-black text-center">Level</th> <th class="px-10 py-6 font-black text-center">Status</th>
                             <th class="px-10 py-6 font-black text-right">Actions</th>
                         </tr>
-                    </thead>
+                  </thead>
                     <tbody class="divide-y divide-slate-50">
                         @forelse($subjects as $subject)
                         <tr class="group hover:bg-slate-50/80 transition-all">
