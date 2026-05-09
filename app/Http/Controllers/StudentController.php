@@ -7,7 +7,7 @@ use App\Models\Grade;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB; // Added for signatories and raw booleans
+use Illuminate\Support\Facades\DB; 
 use Carbon\Carbon;
 
 class StudentController extends Controller
@@ -48,8 +48,8 @@ class StudentController extends Controller
             'identifier' => $request->lrn 
         ]);
 
-        // FIX 1: Use DB::raw('true') for PostgreSQL update compatibility
-        StudentIdentity::where('lrn', $request->lrn)->update(['is_active' => DB::raw('true')]);
+        // PostgreSQL requires 'true' instead of 1
+        StudentIdentity::where('lrn', $request->lrn)->update(['is_active' => true]);
 
         return redirect('/login')->with('success', 'Account created! You can now login.');
     }
@@ -83,7 +83,7 @@ class StudentController extends Controller
         $student = StudentIdentity::where('lrn', $lrn)->first();
         if (!$student) { abort(404); }
 
-        // FIX 2: Changed 1 to true for PostgreSQL boolean comparison
+        // FIX: Changed 1 to true for PostgreSQL
         $query = Grade::where('lrn', $lrn)->where('is_published', true);
 
         if ($request->filled('semester')) {
@@ -93,7 +93,6 @@ class StudentController extends Controller
         $grades = $query->get();
         $gpa = $grades->count() > 0 ? $grades->avg('grade') : 0;
 
-        // FETCH SIGNATORIES FOR DASHBOARD VIEW
         $signatories = (object)[
             'registrar' => DB::table('settings')->where('key', 'registrar')->value('value'),
             'school_head' => DB::table('settings')->where('key', 'school_head')->value('value')
@@ -107,7 +106,7 @@ class StudentController extends Controller
         $student = StudentIdentity::where('lrn', $lrn)->first();
         if (!$student) { abort(404); }
 
-        // FIX 3: Changed 1 to true for PostgreSQL boolean comparison
+        // FIX: Changed 1 to true for PostgreSQL
         $query = Grade::where('lrn', $lrn)->where('is_published', true);
 
         if ($request->filled('semester')) {
@@ -117,7 +116,6 @@ class StudentController extends Controller
         $grades = $query->get();
         $gpa = $grades->count() > 0 ? $grades->avg('grade') : 0;
 
-        // FETCH SIGNATORIES FOR PRINT VIEW
         $signatories = (object)[
             'registrar' => DB::table('settings')->where('key', 'registrar')->value('value'),
             'school_head' => DB::table('settings')->where('key', 'school_head')->value('value')
