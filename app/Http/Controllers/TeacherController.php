@@ -94,7 +94,7 @@ class TeacherController extends Controller
     \App\Models\Grade::create([
         'lrn' => $request->lrn,
         'subject' => $subject->name, 
-        'subject_code' => $subject->code, // Added this line
+        // REMOVED 'subject_code' to stop the error
         'grade' => $request->grade,
         'semester' => $request->quarter,
         'is_submitted_to_admin' => DB::raw('false'), 
