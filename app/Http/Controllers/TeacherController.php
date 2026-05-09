@@ -67,40 +67,42 @@ class TeacherController extends Controller
         return back()->with('success', 'Student enrolled successfully!');
     }
 
-    public function submitGrade(Request $request)
-    {
-        $request->validate([
-            'lrn' => 'required',
-            'subject_id' => 'required',
-            'grade' => 'required|numeric',
-            'quarter' => 'required'
-        ]);
+  public function submitGrade(Request $request)
+{
+    $request->validate([
+        'lrn' => 'required',
+        'subject_id' => 'required',
+        'grade' => 'required|numeric',
+        'quarter' => 'required'
+    ]);
 
-        $subject = \App\Models\Subject::find($request->subject_id);
-        if (!$subject) {
-            return redirect()->back()->with('error', 'Subject not found.');
-        }
-
-        $exists = \App\Models\Grade::where('lrn', $request->lrn)
-            ->where('subject', $subject->name) 
-            ->where('semester', $request->quarter)
-            ->exists();
-
-        if ($exists) {
-            return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
-        }
-
-        \App\Models\Grade::create([
-            'lrn' => $request->lrn,
-            'subject' => $subject->name, 
-            'grade' => $request->grade,
-            'semester' => $request->quarter,
-            'is_submitted_to_admin' => DB::raw('false'), 
-            'is_published' => DB::raw('false')
-        ]);
-
-        return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
+    $subject = \App\Models\Subject::find($request->subject_id);
+    if (!$subject) {
+        return redirect()->back()->with('error', 'Subject not found.');
     }
+
+    $exists = \App\Models\Grade::where('lrn', $request->lrn)
+        ->where('subject', $subject->name) 
+        ->where('semester', $request->quarter)
+        ->exists();
+
+    if ($exists) {
+        return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
+    }
+
+    // FIX: Include 'subject_code' so it's not N/A in the Admin tracker
+    \App\Models\Grade::create([
+        'lrn' => $request->lrn,
+        'subject' => $subject->name, 
+        'subject_code' => $subject->code, // Added this line
+        'grade' => $request->grade,
+        'semester' => $request->quarter,
+        'is_submitted_to_admin' => DB::raw('false'), 
+        'is_published' => DB::raw('false')
+    ]);
+
+    return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
+}
 
    public function sendToAdmin($lrn)
 {
