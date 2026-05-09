@@ -145,7 +145,6 @@ public function login(Request $request)
 
         $role = strtolower($request->role);
         
-        // FIX: Changed 1 to true for PostgreSQL compatibility
         if ($role === 'teacher' || $role === 'admin') {
             TeacherIdentity::where('employee_id', $request->identifier)->update(['is_active' => true]);
         } else {
