@@ -253,17 +253,16 @@ class AdminController extends Controller
     /**
      * Incoming Grades for Admin Approval
      */
-   public function incomingGrades()
-    {
-        // FIX: Use DB::raw('true') and ('false') for PostgreSQL compatibility
-        $incomingGrades = \App\Models\Grade::where('is_submitted_to_admin', DB::raw('true'))
-                               ->where('is_published', DB::raw('false'))
-                               ->orderBy('created_at', 'asc')
-                               ->get()
-                               ->groupBy('lrn');
+  public function incomingGrades()
+{
+    $incomingGrades = \App\Models\Grade::with('subject') // Add this to load subject info
+        ->whereRaw('is_submitted_to_admin::text = ?', ['true'])
+        ->whereRaw('is_published::text = ?', ['false'])
+        ->get()
+        ->groupBy('lrn');
 
-        return view('admin.incoming_grades', compact('incomingGrades'));
-    }
+    return view('admin.incoming_grades', compact('incomingGrades'));
+}
 
     public function forwardToStudent($lrn)
     {
