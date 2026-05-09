@@ -131,10 +131,10 @@ class AdminController extends Controller
         TeacherIdentity::create([
             'employee_id' => $request->employee_id,
             'first_name'  => $request->first_name,
-            'middle_name' => $request->middle_name, // can be null
+            'middle_name' => $request->middle_name,
             'last_name'   => $request->last_name,
             'position'    => $request->position,
-            'is_active'   =>false, 
+            'is_active'   => DB::raw('false'), // This forces PostgreSQL to see the actual boolean keyword
         ]);
 
         return redirect()->back()->with('success', 'Teacher identity authorized successfully!');
@@ -161,9 +161,8 @@ class AdminController extends Controller
             'middle_name' => $request->middle_name,
             'last_name'   => $request->last_name,
             'position'    => $request->position,
-            'is_active'   => $request->is_active,
+            'is_active'   => $request->is_active == '1' || $request->is_active == true ? DB::raw('true') : DB::raw('false'),
         ]);
-
         return redirect()->back()->with('success', 'Teacher record updated successfully!');
     }
 
