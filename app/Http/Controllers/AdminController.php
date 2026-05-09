@@ -320,34 +320,41 @@ class AdminController extends Controller
     }
     
 public function monitoring()
-    {
-        // FIX: Define $term and $subjectsCount before using them in the map
-        $term = '1st Term'; // Or however you determine the current term
-        $subjectsCount = Subject::count();
+{
+    // 1. Get the term from the dropdown (defaults to '1st term')
+    $term = request('term', '1st term'); 
+    
+    // 2. Get total number of subjects to calculate expected grades
+    $subjectsCount = \App\Models\Subject::count();
 
-        $teachers = TeacherIdentity::where('position', 'Teacher')->get()->map(function($teacher) use ($term, $subjectsCount) {
-            $studentIds = StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
-            $totalExpectedGrades = $studentIds->count() * $subjectsCount;
+    $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')->get()->map(function($teacher) use ($term, $subjectsCount) {
+        // 3. Get all LRNs for students under this teacher
+        $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn');
+        
+        $totalStudents = $studentIds->count();
+        $totalExpectedGrades = $totalStudents * $subjectsCount;
 
-            // Use DB::raw for PostgreSQL
-            $sentGrades = Grade::whereIn('lrn', $studentIds)
-                ->where('semester', $term)
-                ->where('is_submitted_to_admin', DB::raw('true'))
-                ->count();
+        // 4. Count grades actually SENT to Admin (is_submitted_to_admin = true)
+        $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+            ->where('semester', $term)
+            ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('true'))
+            ->count();
 
-            $savedGrades = Grade::whereIn('lrn', $studentIds)
-                ->where('semester', $term)
-                ->where('is_submitted_to_admin', DB::raw('false'))
-                ->count();
+        // 5. Count grades that are input but NOT SENT (Drafts/Waiting)
+        $draftGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
+            ->where('semester', $term)
+            ->where('is_submitted_to_admin', \Illuminate\Support\Facades\DB::raw('false'))
+            ->count();
 
-            $teacher->expected_total = $totalExpectedGrades;
-            $teacher->actual_sent = $sentGrades;
-            $teacher->has_drafts = ($savedGrades > 0);
+        // Attach data to the teacher object for the Blade file
+        $teacher->expected_total = $totalExpectedGrades;
+        $teacher->actual_sent = $sentGrades;
+        $teacher->has_drafts = ($draftGrades > 0);
 
-            return $teacher;
-        });
+        return $teacher;
+    });
 
-        return view('admin.monitoring', compact('teachers', 'term'));
-    }
+    return view('admin.monitoring', compact('teachers', 'term'));
+}
 
 }
