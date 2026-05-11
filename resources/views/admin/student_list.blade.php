@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - {{ $level }} Masterlist</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-slate-100 flex">
@@ -53,34 +54,58 @@
             <tr>
                 <th class="px-6 py-3 text-sm font-semibold text-slate-600">LRN</th>
                 <th class="px-6 py-3 text-sm font-semibold text-slate-600">First Name Middle Name Last Name</th>
+                <th class="px-6 py-3 text-sm font-semibold text-slate-600">Level</th> 
                 <th class="px-6 py-3 text-sm font-semibold text-slate-600">Status</th>
                 <th class="px-6 py-3 text-sm font-semibold text-slate-600 text-right">Actions</th>
             </tr>
         </thead>
-        <tbody class="divide-y">
-            @forelse($students as $student)
-            <tr class="hover:bg-slate-50 transition">
+        <tbody class="divide-y" x-data="{ expanded: false }">
+            @forelse($students as $index => $student)
+            <tr class="hover:bg-slate-50 transition" 
+                x-show="expanded || {{ $index }} < 5" 
+                x-transition>
+                
                 <td class="px-6 py-4 text-sm text-slate-700 font-mono font-bold">{{ $student->lrn }}</td>
                 <td class="px-6 py-4 text-sm font-medium text-slate-800 capitalize">
                     {{ $student->fullname }}
                 </td>
+        
                 <td class="px-6 py-4 text-sm">
-                    @if($student->is_active)
-                        <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold uppercase">Active</span>
-                    @else
-                        <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold uppercase">Inactive</span>
-                    @endif
+                    <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-bold uppercase">
+                        {{ $student->level ?? 'N/A' }}
+                    </span>
                 </td>
+        
+                <td class="px-6 py-4 text-sm">
+                    <span class="{{ $student->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }} px-2 py-1 rounded-full text-xs font-bold uppercase">
+                        {{ $student->is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                </td>
+                
                 <td class="px-6 py-4 text-right space-x-2">
                     <button onclick="openStudentArchiveModal('{{ $student->id }}', '{{ $student->fullname }}')" 
-                            class="text-orange-600 hover:text-orange-900 bg-orange-50 p-2 rounded-lg transition" 
-                            title="Move to Archive">
+                            class="text-orange-600 hover:text-orange-900 bg-orange-50 p-2 rounded-lg transition">
                         <i class="fas fa-archive"></i>
                     </button>
                 </td>
             </tr>
             @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-slate-500 italic">No students found.</td>
+                </tr>
             @endforelse
+        
+            @if($students->count() > 5)
+            <tr>
+                <td colspan="5" class="px-6 py-3 text-center bg-slate-50">
+                    <button @click="expanded = !expanded" 
+                            class="text-sm font-bold text-blue-600 hover:text-blue-800 transition flex items-center justify-center w-full">
+                        <span x-text="expanded ? 'Show Less' : 'Show More ({{ $students->count() - 5 }} more)'"></span>
+                        <i class="fas ml-2" :class="expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </button>
+                </td>
+            </tr>
+            @endif
         </tbody>
     </table>
 </div>
