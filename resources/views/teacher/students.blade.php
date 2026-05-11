@@ -185,6 +185,17 @@
                     @endforelse
                 </tbody>
             </table>
+
+            </table>
+            @if($students->count() > 5)
+            <div class="p-4 bg-slate-50 border-t text-center">
+                <button id="toggleBtn" onclick="toggleStudents()" class="text-indigo-600 font-black text-[11px] uppercase tracking-wider hover:text-indigo-800 transition-all">
+                    <i class="fas fa-chevron-down mr-1"></i> Show More
+                </button>
+            </div>
+            @endif
+        </div>
+            
         </div>
     </div>
 
@@ -526,6 +537,44 @@
         document.getElementById('editStudentModal').classList.remove('flex');
         document.getElementById('editStudentModal').classList.add('hidden');
     }
+
+    let isExpanded = false;
+
+    function toggleStudents() {
+        const table = document.getElementById("studentTable");
+        const rows = table.querySelectorAll('tbody tr:not(:first-child)'); // Targets all data rows
+        const btn = document.getElementById('toggleBtn');
+        
+        isExpanded = !isExpanded;
+
+        rows.forEach((row, index) => {
+            // Hide/Show rows after the 5th one
+            if (index >= 5) {
+                row.classList.toggle('hidden');
+            }
+        });
+
+        // Toggle button text and icon
+        if (isExpanded) {
+            btn.innerHTML = '<i class="fas fa-chevron-up mr-1"></i> Show Less';
+        } else {
+            btn.innerHTML = '<i class="fas fa-chevron-down mr-1"></i> Show More';
+        }
+    }
+
+    // INITIALIZATION: Runs when page loads to hide extra rows immediately
+    document.addEventListener('DOMContentLoaded', () => {
+        const table = document.getElementById("studentTable");
+        const rows = table.querySelectorAll('tbody tr');
+        
+        // Hide students starting from index 5 (the 6th student)
+        rows.forEach((row, index) => {
+            if (index >= 5) {
+                row.classList.add('hidden');
+            }
+        });
+    });
+    
 </script>
 
 </body>
