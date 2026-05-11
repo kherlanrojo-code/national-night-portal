@@ -235,20 +235,23 @@ class AdminController extends Controller
     /**
      * Restore Records
      */
-         public function restoreStudent($id)
-{
-    // 1. Find the student in the archive
-    $student = \App\Models\Student::withTrashed()->findOrFail($id);
+          public function restoreStudent($id)
+    {
+        StudentIdentity::withTrashed()->where('id', $id)->restore();
+        return redirect()->back()->with('success', 'Student record restored!');
+    }
 
-    // 2. Restore them
-    $student->restore();
+    public function restoreTeacher($id)
+    {
+        TeacherIdentity::withTrashed()->where('id', $id)->restore();
+        return redirect()->back()->with('success', 'Teacher record restored!');
+    }
 
-    // 3. Ensure they are "Active" so they don't get blocked
-    $student->update(['is_active' => true]);
-
-    return redirect()->back()->with('success', 'Student restored successfully.');
-}
-
+    public function forceDeleteTeacher($id)
+    {
+        TeacherIdentity::withTrashed()->where('id', $id)->forceDelete();
+        return redirect()->back()->with('success', 'Permanently deleted.');
+    }
     /**
      * Incoming Grades for Admin Approval
      */
