@@ -235,28 +235,19 @@ class AdminController extends Controller
     /**
      * Restore Records
      */
-           public function restore($id)
-        {
-            // Find the student including those in the archive
-            $student = Student::withTrashed()->findOrFail($id);
-        
-            // 1. Bring the record back to the Masterlist
-            $student->restore();
-        
-            // 2. RE-ENABLE ACCESS (The missing step)
-            // This ensures they don't have to register or be created again
-            $student->update([
-                'is_active' => true
-            ]);
-        
-            // 3. If you have a separate User model for login, restore that too
-            if ($student->user) {
-                $student->user()->restore(); 
-                $student->user->update(['status' => 'active']);
-            }
-        
-            return back()->with('success', 'Student restored. Old credentials are now active again.');
-        }
+         public function restoreStudent($id)
+{
+    // 1. Find the student in the archive
+    $student = \App\Models\Student::withTrashed()->findOrFail($id);
+
+    // 2. Restore them
+    $student->restore();
+
+    // 3. Ensure they are "Active" so they don't get blocked
+    $student->update(['is_active' => true]);
+
+    return redirect()->back()->with('success', 'Student restored successfully.');
+}
 
     /**
      * Incoming Grades for Admin Approval
