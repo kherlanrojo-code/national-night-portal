@@ -36,10 +36,10 @@ class AdminController extends Controller
         $juniorCount = StudentIdentity::whereIn('level', ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'])->count();
         $seniorCount = StudentIdentity::whereIn('level', ['Grade 11', 'Grade 12'])->count();
         
-    $pendingGrades = Grade::where('is_submitted_to_admin', true)
-                  ->where('is_published', false)
-                  ->distinct('lrn')
-                  ->count('lrn');
+   $pendingGrades = Grade::where('is_submitted_to_admin', true) // Use true/false keywords
+              ->where('is_published', false)
+              ->distinct('lrn')
+              ->count('lrn');
 
         $subjects = Subject::all(); 
 
