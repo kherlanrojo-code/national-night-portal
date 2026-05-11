@@ -36,18 +36,18 @@ class AdminController extends Controller
         $juniorCount = StudentIdentity::whereIn('level', ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'])->count();
         $seniorCount = StudentIdentity::whereIn('level', ['Grade 11', 'Grade 12'])->count();
         
-    $pendingGrades = Grade::whereRaw('is_submitted_to_admin::text = ?', ['true'])
-                      ->whereRaw('is_published::text = ?', ['false'])
-                      ->distinct('lrn')
-                      ->count();
-        
+    $pendingGrades = Grade::where('is_submitted_to_admin', true)
+                  ->where('is_published', false)
+                  ->distinct('lrn')
+                  ->count('lrn');
+
         $subjects = Subject::all(); 
 
         // 5. Fetch current Signatories for the dashboard modal
         $signatories = $this->getSignatories();
 
         // 6. Top 5 Performing Students
-     $topStudents = Grade::whereRaw('is_published::text = ?', ['true'])
+     $topStudents = Grade::where('is_published', true)
         ->select('lrn', DB::raw('AVG(grade) as average'))
             ->groupBy('lrn')
             ->orderBy('average', 'desc')
