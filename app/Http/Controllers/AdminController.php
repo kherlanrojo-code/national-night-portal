@@ -36,10 +36,10 @@ class AdminController extends Controller
         $juniorCount = StudentIdentity::whereIn('level', ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'])->count();
         $seniorCount = StudentIdentity::whereIn('level', ['Grade 11', 'Grade 12'])->count();
         
-   $pendingGrades = Grade::where('is_submitted_to_admin', true) // Use true/false keywords
-              ->where('is_published', false)
-              ->distinct('lrn')
-              ->count('lrn');
+  $pendingGrades = Grade::whereRaw('is_submitted_to_admin = CAST(? AS BOOLEAN)', [true])
+                  ->whereRaw('is_published = CAST(? AS BOOLEAN)', [false])
+                  ->distinct('lrn')
+                  ->count('lrn');
 
         $subjects = Subject::all(); 
 
@@ -47,7 +47,7 @@ class AdminController extends Controller
         $signatories = $this->getSignatories();
 
         // 6. Top 5 Performing Students
-     $topStudents = Grade::where('is_published', true)
+    $topStudents = Grade::whereRaw('is_published = CAST(? AS BOOLEAN)', [true])
         ->select('lrn', DB::raw('AVG(grade) as average'))
             ->groupBy('lrn')
             ->orderBy('average', 'desc')
