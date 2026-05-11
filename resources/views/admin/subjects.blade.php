@@ -100,7 +100,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @forelse($subjects as $subject)
-                    <tr class="group hover:bg-slate-50/80 transition-all">
+                        <tr class="subject-row group hover:bg-slate-50/80 transition-all" style="{{ $loop->iteration > 4 ? 'display: none;' : '' }}">
                         <td class="px-10 py-5">
                             <span class="text-blue-600 font-black text-xs bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
                                 {{ $subject->code }}
@@ -124,6 +124,14 @@
                     @endforelse
                 </tbody>
             </table>
+                  {{-- Show All / Show Less Button --}}
+            @if($subjects->count() > 4)
+                <div class="p-6 border-t border-slate-50 text-center bg-slate-50/30">
+                    <button id="toggleSubjectsBtn" class="bg-white hover:bg-blue-600 text-blue-600 hover:text-white px-8 py-3 rounded-2xl text-xs font-black transition-all border-2 border-blue-600/10 hover:border-blue-600 shadow-sm active:scale-95 uppercase tracking-widest">
+                        <i class="fas fa-eye mr-2"></i> Show All
+                    </button>
+                </div>
+            @endif     
         </div>
         </div>
     </div>
@@ -170,6 +178,30 @@
             const modal = document.getElementById('deleteModal');
             if (event.target == modal) closeDeleteModal();
         }
+        // Toggle Show All / Show Less logic
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleSubjectsBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function() {
+                    const rows = document.querySelectorAll('.subject-row');
+                    const isShowingAll = this.innerHTML.includes('Show Less');
+
+                    rows.forEach((row, index) => {
+                        if (index >= 4) {
+                            row.style.display = isShowingAll ? 'none' : 'table-row';
+                        }
+                    });
+
+                    // Update button content
+                    if (isShowingAll) {
+                        this.innerHTML = '<i class="fas fa-eye mr-2"></i> Show All';
+                    } else {
+                        this.innerHTML = '<i class="fas fa-eye-slash mr-2"></i> Show Less';
+                    }
+                });
+            }
+        });
+        
     </script>
 </body>
 </html>
