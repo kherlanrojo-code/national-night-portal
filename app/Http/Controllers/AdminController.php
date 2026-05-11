@@ -326,8 +326,8 @@ public function monitoring(Request $request)
     // 1. Force lowercase to prevent "1st Term" vs "1st term" issues
     $term = strtolower($request->get('term', '1st term'));
     
-    // 2. Logic: 6 subjects per student
-    $subjectsPerStudent = 6; 
+    // 2. UPDATED: Logic set to 8 subjects per student as requested
+    $subjectsPerStudent = 8; 
 
     $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')
         ->get()
@@ -337,16 +337,17 @@ public function monitoring(Request $request)
             $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn')->toArray();
             $studentCount = count($studentIds);
 
-            // Goal calculation
+            // Goal calculation: Total students multiplied by 8 subjects
             $totalExpectedGrades = $studentCount * $subjectsPerStudent;
 
             if ($studentCount > 0) {
-                // FIX: Use string-based whereRaw for booleans to avoid PostgreSQL operator errors
+                // Count grades already sent to admin for this specific term
                 $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
                     ->whereRaw('LOWER(semester) = ?', [$term])
                     ->whereRaw('is_submitted_to_admin::text = ?', ['true'])
                     ->count();
 
+                // Count grades saved as drafts but not yet sent
                 $savedGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
                     ->whereRaw('LOWER(semester) = ?', [$term])
                     ->whereRaw('is_submitted_to_admin::text = ?', ['false'])
@@ -359,6 +360,10 @@ public function monitoring(Request $request)
             $teacher->expected_total = $totalExpectedGrades;
             $teacher->actual_sent = $sentGrades;
             $teacher->has_drafts = ($savedGrades > 0);
+
+            // 4. ADDED: Logic to determine final completion status
+            // Only marked completed if actual sent grades reach the 8-subject goal
+            $teacher->is_completed = ($totalExpectedGrades > 0 && $sentGrades >= $totalExpectedGrades);
 
             return $teacher;
         });
