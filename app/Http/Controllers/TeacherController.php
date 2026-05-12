@@ -98,17 +98,17 @@ public function submitGrade(Request $request)
         return redirect()->back()->with('error', 'Grade already recorded for ' . $student->level);
     }
 
-    \App\Models\Grade::create([
-    'lrn' => $request->lrn,
-    'subject' => $subject->name, 
-    'subject_code' => $subject->code, // Add this line to fix the print mismatch
-    'level' => $student->level,
-    'grade' => $request->grade,
-    'semester' => $request->quarter,
-    'is_submitted_to_admin' => false, 
-    'is_published' => false
-]);
-
+        \App\Models\Grade::create([
+            'lrn' => $request->lrn,
+            'subject' => $subject->name, 
+            'subject_code' => $subject->code, 
+            'level' => $student->level,
+            'grade' => $request->grade,
+            'semester' => $request->quarter,
+            'is_submitted_to_admin' => false, // Ensure this is boolean false
+            'is_published' => false           // Ensure this is boolean false
+        ]);
+    
     return redirect()->back()->with('success', 'Grade recorded successfully!');
 }
 
