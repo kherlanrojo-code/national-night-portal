@@ -99,15 +99,15 @@ public function submitGrade(Request $request)
     }
 
         \App\Models\Grade::create([
-            'lrn' => $request->lrn,
-            'subject' => $subject->name, 
-            'subject_code' => $subject->code, 
-            'level' => $student->level,
-            'grade' => $request->grade,
-            'semester' => $request->quarter,
-            'is_submitted_to_admin' => false, // Ensure this is boolean false
-            'is_published' => false           // Ensure this is boolean false
-        ]);
+    'lrn' => $request->lrn,
+    'subject' => $subject->name, 
+    'subject_code' => $subject->code, 
+    'level' => $student->level,
+    'grade' => $request->grade,
+    'semester' => $request->quarter,
+    'is_submitted_to_admin' => DB::raw('false'), // Use DB::raw here
+    'is_published' => DB::raw('false')           // Use DB::raw here
+]);
     
     return redirect()->back()->with('success', 'Grade recorded successfully!');
 }
