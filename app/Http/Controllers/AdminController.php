@@ -285,6 +285,24 @@ class AdminController extends Controller
             
                 return redirect()->back()->with('success', 'Admin record and login access restored!');
             }
+
+    public function forceDeleteTeacher($id)
+    {
+        $teacher = TeacherIdentity::withTrashed()->findOrFail($id);
+        User::where('identifier', $teacher->employee_id)->forceDelete();
+        $teacher->forceDelete();
+        return redirect()->back()->with('success', 'Teacher permanently removed.');
+    }
+
+    public function forceDeleteAdmin($id)
+    {
+        // Adjust model name if your Admin model is named differently (e.g., AdminIdentity)
+        $admin = \App\Models\AdminIdentity::withTrashed()->findOrFail($id);
+        User::where('identifier', $admin->id_number)->forceDelete();
+        $admin->forceDelete();
+        return redirect()->back()->with('success', 'Admin permanently removed.');
+    }
+    
             
     /**
      * Incoming Grades for Admin Approval
