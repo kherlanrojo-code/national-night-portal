@@ -255,13 +255,15 @@ class AdminController extends Controller
   public function incomingGrades()
 {
     // REMOVED ->with('subject') to stop the "RelationNotFoundException"
-    $incomingGrades = \App\Models\Grade::whereRaw('is_submitted_to_admin::text = ?', ['true'])
-        ->whereRaw('is_published::text = ?', ['false'])
-        ->get()
-        ->groupBy('lrn');
+    $incomingGrades = \App\Models\Grade::join('student_identities', 'grades.lrn', '=', 'student_identities.lrn')
+    ->whereRaw('grades.is_submitted_to_admin::text = ?', ['true'])
+    ->whereRaw('grades.is_published::text = ?', ['false'])
+    ->whereColumn('grades.level', 'student_identities.level') // The critical fix
+    ->select('grades.*') // Ensure you only select grade columns
+    ->get()
+    ->groupBy('lrn');
 
-    return view('admin.incoming_grades', compact('incomingGrades'));
-}
+return view('admin.incoming_grades', compact('incomingGrades'));
 
     public function forwardToStudent($lrn)
     {
