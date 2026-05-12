@@ -286,7 +286,7 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'Admin record restored!');
     }
-}
+
     
     /**
      * Incoming Grades for Admin Approval
