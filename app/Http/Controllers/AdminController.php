@@ -235,57 +235,56 @@ class AdminController extends Controller
     /**
      * Restore Records
      */
-               public function restoreStudent($id)
-    {
-        $student = StudentIdentity::withTrashed()->findOrFail($id);
-        $student->restore();
-
-        // Fix for PostgreSQL: Use true/false instead of 1/0
-        $student->update(['is_active' => true]);
-
-        // Removed withTrashed() because User model doesn't have it
-        $user = User::where('identifier', $student->lrn)->first();
-        if ($user) {
-            $user->update(['is_active' => true]); 
-        }
-
-        return redirect()->back()->with('success', 'Student record and portal access restored!');
-    }
-
-    // 2. RESTORE TEACHER
-    public function restoreTeacher($id)
-    {
-        $teacher = TeacherIdentity::withTrashed()->findOrFail($id);
-        $teacher->restore();
-
-        // Fix for PostgreSQL: Explicitly use boolean true
-        $teacher->update(['is_active' => true]);
-
-        // Removed withTrashed() to stop the "Call to undefined method" error
-        $user = User::where('identifier', $teacher->employee_id)->first();
-        if ($user) {
-            $user->update(['is_active' => true]);
-        }
-
-        return redirect()->back()->with('success', 'Teacher record and login access restored!');
-    }
-
-    // 3. RESTORE ADMIN (If applicable)
-    public function restoreAdmin($id)
-    {
-        // Adjust the model name if your Admin table is named differently
-        $admin = AdminIdentity::withTrashed()->findOrFail($id);
-        $admin->restore();
-
-        $admin->update(['is_active' => true]);
-
-        $user = User::where('identifier', $admin->id_number)->first();
-        if ($user) {
-            $user->update(['is_active' => true]);
-        }
-
-        return redirect()->back()->with('success', 'Admin record restored!');
-    }
+             // 1. RESTORE STUDENT
+    public function restoreStudent($id)
+            {
+                $student = StudentIdentity::withTrashed()->findOrFail($id);
+                $student->restore();
+        
+                // Use boolean true for PostgreSQL compatibility
+                $student->update(['is_active' => true]);
+        
+                // Use the full namespace to avoid "Class not found"
+                $user = \App\Models\User::where('identifier', $student->lrn)->first();
+                if ($user) {
+                    $user->update(['is_active' => true]); 
+                }
+        
+                return redirect()->back()->with('success', 'Student record and portal access restored!');
+            }
+        
+            // 2. RESTORE TEACHER
+            public function restoreTeacher($id)
+            {
+                $teacher = TeacherIdentity::withTrashed()->findOrFail($id);
+                $teacher->restore();
+        
+                $teacher->update(['is_active' => true]);
+        
+                // Use the full namespace \App\Models\User
+                $user = \App\Models\User::where('identifier', $teacher->employee_id)->first();
+                if ($user) {
+                    $user->update(['is_active' => true]);
+                }
+        
+                return redirect()->back()->with('success', 'Teacher record and login access restored!');
+            }
+        
+            // 3. RESTORE ADMIN
+            public function restoreAdmin($id)
+            {
+                $admin = AdminIdentity::withTrashed()->findOrFail($id);
+                $admin->restore();
+        
+                $admin->update(['is_active' => true]);
+        
+                $user = \App\Models\User::where('identifier', $admin->id_number)->first();
+                if ($user) {
+                    $user->update(['is_active' => true]);
+                }
+        
+                return redirect()->back()->with('success', 'Admin record restored!');
+            }
 
     
     /**
