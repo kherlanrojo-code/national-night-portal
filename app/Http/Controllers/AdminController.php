@@ -235,23 +235,20 @@ class AdminController extends Controller
     /**
      * Restore Records
      */
-          public function restoreStudent($id)
-    {
-        StudentIdentity::withTrashed()->where('id', $id)->restore();
-        return redirect()->back()->with('success', 'Student record restored!');
-    }
+         public function restoreStudent($id)
+{
+    // 1. Find and restore the identity
+    $student = StudentIdentity::withTrashed()->findOrFail($id);
+    $student->restore();
 
-    public function restoreTeacher($id)
-    {
-        TeacherIdentity::withTrashed()->where('id', $id)->restore();
-        return redirect()->back()->with('success', 'Teacher record restored!');
-    }
+    // 2. IMPORTANT: Flip the status back to Active so they can log in
+    $student->update(['is_active' => true]);
 
-    public function forceDeleteTeacher($id)
-    {
-        TeacherIdentity::withTrashed()->where('id', $id)->forceDelete();
-        return redirect()->back()->with('success', 'Permanently deleted.');
-    }
+    // 3. Optional: If you also soft-deleted the user login, restore it here
+    \App\Models\User::withTrashed()->where('identifier', $student->lrn)->restore();
+
+    return redirect()->back()->with('success', 'Student record and portal access restored!');
+}
     /**
      * Incoming Grades for Admin Approval
      */
@@ -282,8 +279,12 @@ class AdminController extends Controller
     public function generateReport($lrn)
 {
     $student = StudentIdentity::where('lrn', $lrn)->firstOrFail();
+
+    // The Fix: Add a check for the student's current level
+    // This ignores English 7 if the student is currently Grade 11
     $grades = Grade::where('lrn', $lrn)
-                   ->where('is_published', true) // Changed from 1
+                   ->where('level', $student->level) // <-- ADD THIS LINE
+                   ->where('is_published', true)
                    ->get();
     
     $signatories = $this->getSignatories();
