@@ -36,10 +36,10 @@ class AdminController extends Controller
         $juniorCount = StudentIdentity::whereIn('level', ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'])->count();
         $seniorCount = StudentIdentity::whereIn('level', ['Grade 11', 'Grade 12'])->count();
         
-   $pendingGrades = Grade::where('is_submitted_to_admin', true) // Use true/false keywords
-              ->where('is_published', false)
-              ->distinct('lrn')
-              ->count('lrn');
+  $pendingGrades = Grade::whereRaw('is_submitted_to_admin = CAST(? AS BOOLEAN)', [true])
+                  ->whereRaw('is_published = CAST(? AS BOOLEAN)', [false])
+                  ->distinct('lrn')
+                  ->count('lrn');
 
         $subjects = Subject::all(); 
 
@@ -47,7 +47,7 @@ class AdminController extends Controller
         $signatories = $this->getSignatories();
 
         // 6. Top 5 Performing Students
-     $topStudents = Grade::where('is_published', true)
+    $topStudents = Grade::whereRaw('is_published = CAST(? AS BOOLEAN)', [true])
         ->select('lrn', DB::raw('AVG(grade) as average'))
             ->groupBy('lrn')
             ->orderBy('average', 'desc')
@@ -235,38 +235,36 @@ class AdminController extends Controller
     /**
      * Restore Records
      */
-    public function restoreStudent($id)
-    {
-        StudentIdentity::withTrashed()->where('id', $id)->restore();
-        return redirect()->back()->with('success', 'Student record restored!');
-    }
+         public function restoreStudent($id)
+{
+    // 1. Find and restore the identity
+    $student = StudentIdentity::withTrashed()->findOrFail($id);
+    $student->restore();
 
-    public function restoreTeacher($id)
-    {
-        TeacherIdentity::withTrashed()->where('id', $id)->restore();
-        return redirect()->back()->with('success', 'Teacher record restored!');
-    }
+    // 2. IMPORTANT: Flip the status back to Active so they can log in
+    $student->update(['is_active' => true]);
 
-    public function forceDeleteTeacher($id)
-    {
-        TeacherIdentity::withTrashed()->where('id', $id)->forceDelete();
-        return redirect()->back()->with('success', 'Permanently deleted.');
-    }
+    // 3. Optional: If you also soft-deleted the user login, restore it here
+    \App\Models\User::withTrashed()->where('identifier', $student->lrn)->restore();
 
+    return redirect()->back()->with('success', 'Student record and portal access restored!');
+}
     /**
      * Incoming Grades for Admin Approval
      */
   public function incomingGrades()
 {
     // REMOVED ->with('subject') to stop the "RelationNotFoundException"
-    $incomingGrades = \App\Models\Grade::whereRaw('is_submitted_to_admin::text = ?', ['true'])
-        ->whereRaw('is_published::text = ?', ['false'])
-        ->get()
-        ->groupBy('lrn');
+    $incomingGrades = \App\Models\Grade::join('student_identities', 'grades.lrn', '=', 'student_identities.lrn')
+    ->whereRaw('grades.is_submitted_to_admin::text = ?', ['true'])
+    ->whereRaw('grades.is_published::text = ?', ['false'])
+    ->whereColumn('grades.level', 'student_identities.level') // The critical fix
+    ->select('grades.*') // Ensure you only select grade columns
+    ->get()
+    ->groupBy('lrn');
 
-    return view('admin.incoming_grades', compact('incomingGrades'));
+return view('admin.incoming_grades', compact('incomingGrades'));
 }
-
     public function forwardToStudent($lrn)
     {
         // FIX: Use DB::raw for both the WHERE clause and the UPDATE values
@@ -283,8 +281,12 @@ class AdminController extends Controller
     public function generateReport($lrn)
 {
     $student = StudentIdentity::where('lrn', $lrn)->firstOrFail();
+
+    // The Fix: Add a check for the student's current level
+    // This ignores English 7 if the student is currently Grade 11
     $grades = Grade::where('lrn', $lrn)
-                   ->where('is_published', true) // Changed from 1
+                   ->where('level', $student->level) // <-- ADD THIS LINE
+                   ->where('is_published', true)
                    ->get();
     
     $signatories = $this->getSignatories();
@@ -326,8 +328,8 @@ public function monitoring(Request $request)
     // 1. Force lowercase to prevent "1st Term" vs "1st term" issues
     $term = strtolower($request->get('term', '1st term'));
     
-    // 2. Logic: 6 subjects per student
-    $subjectsPerStudent = 6; 
+    // 2. UPDATED: Logic set to 8 subjects per student as requested
+    $subjectsPerStudent = 8; 
 
     $teachers = \App\Models\TeacherIdentity::where('position', 'Teacher')
         ->get()
@@ -337,16 +339,17 @@ public function monitoring(Request $request)
             $studentIds = \App\Models\StudentIdentity::where('adviser_id', $teacher->id)->pluck('lrn')->toArray();
             $studentCount = count($studentIds);
 
-            // Goal calculation
+            // Goal calculation: Total students multiplied by 8 subjects
             $totalExpectedGrades = $studentCount * $subjectsPerStudent;
 
             if ($studentCount > 0) {
-                // FIX: Use string-based whereRaw for booleans to avoid PostgreSQL operator errors
+                // Count grades already sent to admin for this specific term
                 $sentGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
                     ->whereRaw('LOWER(semester) = ?', [$term])
                     ->whereRaw('is_submitted_to_admin::text = ?', ['true'])
                     ->count();
 
+                // Count grades saved as drafts but not yet sent
                 $savedGrades = \App\Models\Grade::whereIn('lrn', $studentIds)
                     ->whereRaw('LOWER(semester) = ?', [$term])
                     ->whereRaw('is_submitted_to_admin::text = ?', ['false'])
@@ -359,6 +362,10 @@ public function monitoring(Request $request)
             $teacher->expected_total = $totalExpectedGrades;
             $teacher->actual_sent = $sentGrades;
             $teacher->has_drafts = ($savedGrades > 0);
+
+            // 4. ADDED: Logic to determine final completion status
+            // Only marked completed if actual sent grades reach the 8-subject goal
+            $teacher->is_completed = ($totalExpectedGrades > 0 && $sentGrades >= $totalExpectedGrades);
 
             return $teacher;
         });

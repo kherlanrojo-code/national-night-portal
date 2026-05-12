@@ -124,18 +124,26 @@
                     @endforelse
                 </tbody>
             </table>
+<<<<<<< HEAD
 
             </table>
             
             {{-- Show All / Show Less Button --}}
+=======
+                  {{-- Show All / Show Less Button --}}
+>>>>>>> f08647d0aa052221a8cdff5a40daea74ce7d2fd3
             @if($subjects->count() > 4)
                 <div class="p-6 border-t border-slate-50 text-center bg-slate-50/30">
                     <button id="toggleSubjectsBtn" class="bg-white hover:bg-blue-600 text-blue-600 hover:text-white px-8 py-3 rounded-2xl text-xs font-black transition-all border-2 border-blue-600/10 hover:border-blue-600 shadow-sm active:scale-95 uppercase tracking-widest">
                         <i class="fas fa-eye mr-2"></i> Show All
                     </button>
                 </div>
+<<<<<<< HEAD
             @endif
         </div>
+=======
+            @endif     
+>>>>>>> f08647d0aa052221a8cdff5a40daea74ce7d2fd3
         </div>
         </div>
     </div>
@@ -182,7 +190,10 @@
             const modal = document.getElementById('deleteModal');
             if (event.target == modal) closeDeleteModal();
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> f08647d0aa052221a8cdff5a40daea74ce7d2fd3
         // Toggle Show All / Show Less logic
         document.addEventListener('DOMContentLoaded', function () {
             const toggleBtn = document.getElementById('toggleSubjectsBtn');

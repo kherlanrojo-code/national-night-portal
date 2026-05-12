@@ -50,19 +50,18 @@
                             {{ $teacher->fullname }}
                         </td>
                         <td class="px-6 py-4 text-center">
+                            {{-- Logic: Marked COMPLETED only if actual_sent reaches (Students * 8) --}}
                             @if($teacher->expected_total > 0 && $teacher->actual_sent >= $teacher->expected_total)
-                                {{-- Status: Every subject for every student is SENT --}}
-                                <span class="text-green-600 bg-green-50 px-3 py-1 rounded-full text-[10px] font-black border border-green-100">
+                                <span class="text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-[10px] font-black border border-emerald-100 shadow-sm">
                                     <i class="fas fa-check-double mr-1"></i> COMPLETED
                                 </span>
                             @elseif($teacher->actual_sent > 0 || $teacher->has_drafts)
-                                {{-- Status: Some grades are sent OR some are waiting for projects (drafts) --}}
+                                {{-- Logic: Shows exactly how many of the 8 subjects per student are still missing --}}
                                 <span class="text-orange-600 bg-orange-50 px-3 py-1 rounded-full text-[10px] font-black border border-orange-100">
                                     <i class="fas fa-exclamation-triangle mr-1"></i> 
                                     PARTIAL ({{ $teacher->expected_total - $teacher->actual_sent }} MISSING)
                                 </span>
                             @else
-                                {{-- Status: No grades recorded at all for this term --}}
                                 <span class="text-red-600 bg-red-50 px-3 py-1 rounded-full text-[10px] font-black border border-red-100">
                                     <i class="fas fa-times-circle mr-1"></i> NO SUBMISSION
                                 </span>

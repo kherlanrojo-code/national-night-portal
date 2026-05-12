@@ -56,48 +56,57 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
-    @foreach($teachers as $teacher)
-    <tr class="hover:bg-slate-50 transition-colors">
-        <td class="px-6 py-4 text-sm font-bold text-slate-800">
-            {{ $teacher->employee_id }}
-        </td>
-
-        <td class="px-6 py-4 text-sm text-slate-700 capitalize">
-            {{ $teacher->first_name }} {{ $teacher->middle_name }} {{ $teacher->last_name }}
-        </td>
-
-        <td class="px-6 py-4 text-sm text-slate-500 italic">
-            {{ $teacher->position ?? 'Teacher' }}
-        </td>
-
-        <td class="px-6 py-4 text-sm">
-            @if($teacher->is_active)
-                <span class="px-3 py-1 text-xs font-bold bg-green-100 text-green-700 rounded-full uppercase">
-                    Active
-                </span>
-            @else
-                <span class="px-3 py-1 text-xs font-bold bg-red-100 text-red-700 rounded-full uppercase">
-                    Inactive
-                </span>
-            @endif
-        </td>
-
-        <td class="px-6 py-4 text-right space-x-2">
-            <button onclick="openEditModal('{{ $teacher->id }}', '{{ $teacher->employee_id }}', '{{ $teacher->first_name }}', '{{ $teacher->middle_name }}', '{{ $teacher->last_name }}', '{{ $teacher->position }}', '{{ $teacher->is_active }}')" 
-                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                <i class="fas fa-edit"></i>
-            </button>
-            
-            <button onclick="openDeleteModal('{{ $teacher->id }}', '{{ $teacher->first_name }} {{ $teacher->last_name }}')" 
-                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    </tr>
-    @endforeach
-</tbody>
+                    @foreach($teachers as $teacher)
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-sm font-bold text-slate-800">
+                            {{ $teacher->employee_id }}
+                        </td>
+                
+                        <td class="px-6 py-4 text-sm text-slate-700 capitalize">
+                            {{ $teacher->first_name }} {{ $teacher->middle_name }} {{ $teacher->last_name }}
+                        </td>
+                
+                        <td class="px-6 py-4 text-sm text-slate-500 italic">
+                            {{ $teacher->position ?? 'Teacher' }}
+                        </td>
+                
+                        <td class="px-6 py-4 text-sm">
+                            @if($teacher->is_active)
+                                <span class="px-3 py-1 text-xs font-bold bg-green-100 text-green-700 rounded-full uppercase">
+                                    Active
+                                </span>
+                            @else
+                                <span class="px-3 py-1 text-xs font-bold bg-red-100 text-red-700 rounded-full uppercase">
+                                    Inactive
+                                </span>
+                            @endif
+                        </td>
+                
+                        <td class="px-6 py-4 text-right space-x-2">
+                            <button onclick="openEditModal('{{ $teacher->id }}', '{{ $teacher->employee_id }}', '{{ $teacher->first_name }}', '{{ $teacher->middle_name }}', '{{ $teacher->last_name }}', '{{ $teacher->position }}', '{{ $teacher->is_active }}')" 
+                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            
+                            <button onclick="openDeleteModal('{{ $teacher->id }}', '{{ $teacher->first_name }} {{ $teacher->last_name }}')" 
+                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
 
             </table>
+
+            @if(count($teachers) > 5)
+            <div class="p-4 bg-slate-50 border-t text-center">
+                <button id="toggleBtn" onclick="toggleTeachers()" class="text-blue-600 font-black text-[11px] uppercase tracking-wider hover:text-blue-800 transition-all">
+                    <i class="fas fa-chevron-down mr-1"></i> Show More
+                </button>
+            </div>
+            @endif
+            
         </div>
     </div>
 
@@ -230,6 +239,33 @@
             document.getElementById('deleteTeacherName').innerText = name;
             toggleModal('deleteModal');
         }
+
+      let isExpanded = false;
+    
+        function toggleTeachers() {
+            const rows = document.querySelectorAll('tbody tr');
+            const btn = document.getElementById('toggleBtn');
+            
+            isExpanded = !isExpanded;
+        
+            rows.forEach((row, index) => {
+                if (index >= 5) {
+                    row.classList.toggle('hidden');
+                }
+            });
+        
+            if (isExpanded) {
+                btn.innerHTML = '<i class="fas fa-chevron-up mr-1"></i> Show Less';
+            } else {
+                btn.innerHTML = '<i class="fas fa-chevron-down mr-1"></i> Show More';
+            }
+        }
+    
+        // INITIAL HIDE: This hides rows 6 and above as soon as the page loads
+        document.querySelectorAll('tbody tr').forEach((row, index) => {
+            if (index >= 5) row.classList.add('hidden');
+        });
+        
     </script>
 
 </body>
