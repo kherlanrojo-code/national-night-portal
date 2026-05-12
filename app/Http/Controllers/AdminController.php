@@ -270,27 +270,22 @@ class AdminController extends Controller
                 return redirect()->back()->with('success', 'Teacher record and login access restored!');
             }
         
-           public function restoreAdmin($id)
-                {
-                    // Find the archived admin
-                    $admin = AdminIdentity::withTrashed()->findOrFail($id);
-                    
-                    // Restore the soft-deleted record
-                    $admin->restore();
-                
-                    // Force the boolean 'true' for PostgreSQL
-                    $admin->update(['is_active' => \DB::raw('true')]);
-                
-                    // Also restore their login access in the Users table
-                    $user = \App\Models\User::where('identifier', $admin->id_number)->first();
-                    if ($user) {
-                        $user->update(['is_active' => \DB::raw('true')]);
-                    }
-                
-                    return redirect()->back()->with('success', 'Admin record and login access restored!');
+         public function restoreAdmin($id)
+            {
+                $admin = AdminIdentity::withTrashed()->findOrFail($id);
+                $admin->restore();
+            
+                // Use DB::raw to force PostgreSQL to see the boolean 'true'
+                $admin->update(['is_active' => \DB::raw('true')]);
+            
+                $user = \App\Models\User::where('identifier', $admin->id_number)->first();
+                if ($user) {
+                    $user->update(['is_active' => \DB::raw('true')]);
                 }
-
-    
+            
+                return redirect()->back()->with('success', 'Admin record and login access restored!');
+            }
+            
     /**
      * Incoming Grades for Admin Approval
      */
