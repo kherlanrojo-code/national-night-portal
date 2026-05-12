@@ -264,7 +264,7 @@ class AdminController extends Controller
     ->groupBy('lrn');
 
 return view('admin.incoming_grades', compact('incomingGrades'));
-
+}
     public function forwardToStudent($lrn)
     {
         // FIX: Use DB::raw for both the WHERE clause and the UPDATE values
