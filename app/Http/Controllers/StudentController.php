@@ -100,22 +100,29 @@ class StudentController extends Controller
         return view('student.dashboard', compact('student', 'grades', 'gpa', 'signatories'));
     }
 
-    public function printGrades(Request $request, $lrn)
+   public function printGrades(Request $request, $lrn)
 {
     $student = \App\Models\StudentIdentity::where('lrn', $lrn)->first();
     if (!$student) { abort(404); }
 
-    // Use a Join to pull the code from the subjects table based on the subject name
     $query = \App\Models\Grade::where('grades.lrn', $lrn)
-        ->whereRaw('is_published = true')
-        ->leftJoin('subjects', 'grades.subject', '=', 'subjects.name')
-        ->select('grades.*', 'subjects.code as subject_code'); // This creates the 'subject_code' variable
+        ->whereRaw('grades.is_published = true')
+        // CRITICAL FIX: Join on NAME AND LEVEL to avoid duplicates from other years
+        ->leftJoin('subjects', function($join) use ($student) {
+            $join->on('grades.subject', '=', 'subjects.name')
+                 ->where('subjects.level', '=', $student->level);
+        })
+        ->select('grades.*', 'subjects.code as subject_code');
 
     if ($request->filled('semester')) {
         $query->where('grades.semester', $request->semester);
     }
 
     $grades = $query->get();
+    
+    // Additional Safety: If the join still produces duplicates, unique them by subject name
+    $grades = $grades->unique('subject');
+
     $gpa = $grades->count() > 0 ? $grades->avg('grade') : 0;
 
     $signatories = (object)[
