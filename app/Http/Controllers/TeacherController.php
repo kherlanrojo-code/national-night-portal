@@ -69,7 +69,7 @@ class TeacherController extends Controller
         return back()->with('success', 'Student enrolled successfully!');
     }
 
-  public function submitGrade(Request $request)
+public function submitGrade(Request $request)
 {
     $request->validate([
         'lrn' => 'required',
@@ -79,31 +79,36 @@ class TeacherController extends Controller
     ]);
 
     $subject = \App\Models\Subject::find($request->subject_id);
-    if (!$subject) {
-        return redirect()->back()->with('error', 'Subject not found.');
+    
+    // Find the student to get their CURRENT grade level (e.g., Grade 11)
+    $student = StudentIdentity::where('lrn', $request->lrn)->first();
+
+    if (!$subject || !$student) {
+        return redirect()->back()->with('error', 'Record not found.');
     }
 
+    // This checks if the grade already exists for this SPECIFIC Level
     $exists = \App\Models\Grade::where('lrn', $request->lrn)
         ->where('subject', $subject->name) 
+        ->where('level', $student->level) // The critical fix
         ->where('semester', $request->quarter)
         ->exists();
 
     if ($exists) {
-        return redirect()->back()->with('error', 'Grade for ' . $subject->name . ' in ' . $request->quarter . ' is already recorded.');
+        return redirect()->back()->with('error', 'Grade already recorded for ' . $student->level);
     }
 
-    // FIX: Include 'subject_code' so it's not N/A in the Admin tracker
     \App\Models\Grade::create([
         'lrn' => $request->lrn,
         'subject' => $subject->name, 
-        // REMOVED 'subject_code' to stop the error
+        'level' => $student->level, // Saves the level to the record
         'grade' => $request->grade,
         'semester' => $request->quarter,
         'is_submitted_to_admin' => DB::raw('false'), 
         'is_published' => DB::raw('false')
     ]);
 
-    return redirect()->back()->with('success', 'Grade recorded for ' . $request->quarter);
+    return redirect()->back()->with('success', 'Grade recorded successfully!');
 }
 
    public function sendToAdmin($lrn)
