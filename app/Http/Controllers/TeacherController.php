@@ -99,14 +99,15 @@ public function submitGrade(Request $request)
     }
 
     \App\Models\Grade::create([
-        'lrn' => $request->lrn,
-        'subject' => $subject->name, 
-        'level' => $student->level, // Saves the level to the record
-        'grade' => $request->grade,
-        'semester' => $request->quarter,
-        'is_submitted_to_admin' => DB::raw('false'), 
-        'is_published' => DB::raw('false')
-    ]);
+    'lrn' => $request->lrn,
+    'subject' => $subject->name, 
+    'subject_code' => $subject->code, // Add this line to fix the print mismatch
+    'level' => $student->level,
+    'grade' => $request->grade,
+    'semester' => $request->quarter,
+    'is_submitted_to_admin' => false, 
+    'is_published' => false
+]);
 
     return redirect()->back()->with('success', 'Grade recorded successfully!');
 }
