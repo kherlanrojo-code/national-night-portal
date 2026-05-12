@@ -235,36 +235,58 @@ class AdminController extends Controller
     /**
      * Restore Records
      */
-       public function restoreStudent($id)
-{
-    $student = StudentIdentity::withTrashed()->findOrFail($id);
-    $student->restore();
+               public function restoreStudent($id)
+    {
+        $student = StudentIdentity::withTrashed()->findOrFail($id);
+        $student->restore();
 
-    $student->update(['is_active' => true]);
+        // Fix for PostgreSQL: Use true/false instead of 1/0
+        $student->update(['is_active' => true]);
 
-    // Better way to restore the user account
-    $user = \App\Models\User::withTrashed()->where('identifier', $student->lrn)->first();
-    if ($user) {
-        $user->restore();
+        // Removed withTrashed() because User model doesn't have it
+        $user = User::where('identifier', $student->lrn)->first();
+        if ($user) {
+            $user->update(['is_active' => true]); 
+        }
+
+        return redirect()->back()->with('success', 'Student record and portal access restored!');
     }
 
-    return redirect()->back()->with('success', 'Student record and portal access restored!');
-}
-
+    // 2. RESTORE TEACHER
     public function restoreTeacher($id)
     {
-        // Find teacher in archive
         $teacher = TeacherIdentity::withTrashed()->findOrFail($id);
         $teacher->restore();
 
-        // Re-activate them so they can log in
+        // Fix for PostgreSQL: Explicitly use boolean true
         $teacher->update(['is_active' => true]);
 
-        // Restore the User login account if it was soft-deleted
-        \App\Models\User::withTrashed()->where('identifier', $teacher->employee_id)->restore();
+        // Removed withTrashed() to stop the "Call to undefined method" error
+        $user = User::where('identifier', $teacher->employee_id)->first();
+        if ($user) {
+            $user->update(['is_active' => true]);
+        }
 
         return redirect()->back()->with('success', 'Teacher record and login access restored!');
     }
+
+    // 3. RESTORE ADMIN (If applicable)
+    public function restoreAdmin($id)
+    {
+        // Adjust the model name if your Admin table is named differently
+        $admin = AdminIdentity::withTrashed()->findOrFail($id);
+        $admin->restore();
+
+        $admin->update(['is_active' => true]);
+
+        $user = User::where('identifier', $admin->id_number)->first();
+        if ($user) {
+            $user->update(['is_active' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Admin record restored!');
+    }
+}
     
     /**
      * Incoming Grades for Admin Approval
