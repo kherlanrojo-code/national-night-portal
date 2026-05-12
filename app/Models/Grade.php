@@ -10,6 +10,7 @@ class Grade extends Model
         'lrn', 
         'subject', 
         'subject_code',
+        'level',
         'grade', 
         'semester', 
         'quarter',
