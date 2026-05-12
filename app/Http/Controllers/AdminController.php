@@ -235,20 +235,37 @@ class AdminController extends Controller
     /**
      * Restore Records
      */
-         public function restoreStudent($id)
+       public function restoreStudent($id)
 {
-    // 1. Find and restore the identity
     $student = StudentIdentity::withTrashed()->findOrFail($id);
     $student->restore();
 
-    // 2. IMPORTANT: Flip the status back to Active so they can log in
     $student->update(['is_active' => true]);
 
-    // 3. Optional: If you also soft-deleted the user login, restore it here
-    \App\Models\User::withTrashed()->where('identifier', $student->lrn)->restore();
+    // Better way to restore the user account
+    $user = \App\Models\User::withTrashed()->where('identifier', $student->lrn)->first();
+    if ($user) {
+        $user->restore();
+    }
 
     return redirect()->back()->with('success', 'Student record and portal access restored!');
 }
+
+    public function restoreTeacher($id)
+    {
+        // Find teacher in archive
+        $teacher = TeacherIdentity::withTrashed()->findOrFail($id);
+        $teacher->restore();
+
+        // Re-activate them so they can log in
+        $teacher->update(['is_active' => true]);
+
+        // Restore the User login account if it was soft-deleted
+        \App\Models\User::withTrashed()->where('identifier', $teacher->employee_id)->restore();
+
+        return redirect()->back()->with('success', 'Teacher record and login access restored!');
+    }
+    
     /**
      * Incoming Grades for Admin Approval
      */
