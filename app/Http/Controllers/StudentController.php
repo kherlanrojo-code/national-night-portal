@@ -100,28 +100,27 @@ class StudentController extends Controller
         return view('student.dashboard', compact('student', 'grades', 'gpa', 'signatories'));
     }
 
-   public function printGrades(Request $request, $lrn)
+public function printGrades(Request $request, $lrn)
 {
     $student = \App\Models\StudentIdentity::where('lrn', $lrn)->first();
     if (!$student) { abort(404); }
 
     $query = \App\Models\Grade::where('grades.lrn', $lrn)
         ->whereRaw('grades.is_published = true')
-        // CRITICAL FIX: Join on NAME AND LEVEL to avoid duplicates from other years
+        // Join on name AND level, but use a LEFT JOIN so the grade shows even if the subject code is missing
         ->leftJoin('subjects', function($join) use ($student) {
             $join->on('grades.subject', '=', 'subjects.name')
                  ->where('subjects.level', '=', $student->level);
         })
-        ->select('grades.*', 'subjects.code as subject_code');
+        // Select everything from grades, and the code from subjects (aliased to avoid conflict)
+        ->select('grades.*', 'subjects.code as subject_code_from_table');
 
     if ($request->filled('semester')) {
         $query->where('grades.semester', $request->semester);
     }
 
-    $grades = $query->get();
-    
-    // Additional Safety: If the join still produces duplicates, unique them by subject name
-    $grades = $grades->unique('subject');
+    // IMPORTANT: Remove ->unique('subject') so that 1st Term Math AND 3rd Term Math both show up
+    $grades = $query->orderBy('grades.semester', 'asc')->get();
 
     $gpa = $grades->count() > 0 ? $grades->avg('grade') : 0;
 
